@@ -1,0 +1,120 @@
+import pyray as rl
+
+from ui.text import RichTextChunk
+from game.ui import print_line
+
+class Location:
+    pass
+
+class Command:
+    pattern = [[]]
+    description = ". . ."
+
+    def __init__(self) -> None:
+        raise NotImplementedError
+
+    @staticmethod
+    def execute(arguments: list) -> None:
+        raise NotImplementedError
+
+    @classmethod
+    def to_str(cls) -> str:
+        # NOTE: Can't use __str__ here because there are no instances of
+        # commands. At least I don't THINK theres a way to do __str__ on
+        # classes... my WiFi is down. Maybe some abstractbaseclass stuff
+        out = []
+
+        for option_set in cls.pattern:
+            clean = []
+            for bit in option_set:
+                # FUTURE: Add Location, Item, etc support
+                assert isinstance(bit, str)
+                clean.append(bit)
+            out.append("[%s]" % "/".join(clean))
+
+        return " ".join(out)
+
+
+class HelpCommand(Command):
+    pattern = [["?", "help"]]
+    description = "Lists all commands (this menu!)"
+
+    @staticmethod
+    def execute(arguments: list) -> None:
+        print_line("-- Help --")
+        for command in commands:
+            print_line(f"{command.to_str()} - {command.description}")
+
+class ExitCommand(Command):
+    pattern = [["quit", "exit", "bye"]]
+    description = "Exits the game, if you insist."
+
+    @staticmethod
+    def execute(arguments: list) -> None:
+        print_line("Bye!")
+        exit(0)
+
+def get_command_classes():
+    # This is probably overkill idk if I'll even be subclassing
+    out = set()
+    new = [Command]
+
+    while new:
+        cls = new.pop()
+        if cls != Command:
+            out.add(cls)
+        
+        for sub in cls.__subclasses__():
+            if sub in out: continue
+            new.append(sub)
+    return out
+
+commands = get_command_classes()
+
+def parse_for_command(command: Command, arg_str: str) -> list:
+    args = []
+    expectations = list(command.pattern[1:])
+
+    while expectations:
+        expectation = expectations.pop(0)
+        pass
+
+    return args
+
+def run_command(command_line: str) -> None:
+    print_line(RichTextChunk(
+        f"> {command_line}",
+        color=rl.Color(0xFF, 0xFF, 0xBB, 0xFF)
+    ))
+
+    command_line = command_line.lower()
+
+    alias_to_command = {}
+    for command in commands:
+        for alias in command.pattern[0]:
+            alias_to_command[alias] = command
+
+    # Leading option search (longest to shortest; match "look at" before "look")
+    alias_to_command = dict(sorted(
+        alias_to_command.items(),
+        key=lambda x: len(x[0]),
+        reverse=True
+    ))
+
+    for starter, command in alias_to_command.items():
+        # Of course it's gotta be this annoying because we're not just splitting
+        # at spaces and matching. Do I even know if I will have commands with
+        # spaces in them? Nope!
+        if not command_line.startswith(starter): continue
+
+        arg_str = command_line[len(starter):].strip()
+        print(arg_str)
+        args = parse_for_command(command, arg_str)
+        print(args)
+        command.execute(args)
+
+        break
+    else:
+        # TODO: More helpful errors with like Levenshtein distance
+        print_line("Huh? I don't get that command.")
+

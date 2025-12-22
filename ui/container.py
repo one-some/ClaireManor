@@ -10,6 +10,7 @@ class VAlign(Enum):
 class Container(Renderable):
     def __init__(self, **kwargs) -> None:
         self.v_align = kwargs.pop("v_align", VAlign.TOP)
+        self.gap = kwargs.pop("gap", 2)
         self._cached_reflow_size = Vector2.zero()
         super().__init__(**kwargs)
 
@@ -31,7 +32,7 @@ class VStackContainer(Container):
     def reflow_layout(self, allocated_size: Vector2) -> None:
         self._cached_reflow_size = allocated_size
 
-        wiggle_room = allocated_size.y
+        wiggle_room = allocated_size.y - (self.gap * (len(self.children) - 1))
         dynamic_children = len(self.children)
 
         for child in self.children:
@@ -65,8 +66,8 @@ class VStackContainer(Container):
             child.position.x = 0
 
             if self.v_align == VAlign.BOTTOM:
-                pos_y -= child_size.y
+                pos_y -= child_size.y + self.gap
                 child.position.y = pos_y
             else:
                 child.position.y = pos_y
-                pos_y += child_size.y
+                pos_y += child_size.y + self.gap

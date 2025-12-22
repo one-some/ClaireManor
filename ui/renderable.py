@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import pyray as rl
 from ui.vector2 import Vector2
 
 class Renderable:
@@ -5,15 +8,23 @@ class Renderable:
     # inheritence chain. I was worried it wouldn't catch parameter typos until
     # it dawned upon me that I don't use autocomplete
 
+    font: rl.Font
+
     def __init__(self, **kwargs) -> None:
         self.position = kwargs.pop("position", Vector2.zero())
         self.static_size = kwargs.pop("static_size", None)
+
+        if "parent" in kwargs:
+            kwargs.pop("parent").add_child(self)
 
         self.children: list[Renderable] = []
 
         # All the arguments should have been eaten before here. Otherwise, the
         # argument is misspelled. We're all picky eaters here
         assert not kwargs
+
+    def add_child(self, child: Renderable) -> None:
+        self.children.append(child)
 
     def render_self(self) -> None:
         raise NotImplementedError

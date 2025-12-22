@@ -17,5 +17,8 @@ class Vector2:
     def to_raylib(self) -> rl.Vector2:
         return rl.Vector2(self.x, self.y)
 
+    def copy(self) -> Vector2:
+        return Vector2(self.x, self.y)
+
     def __str__(self) -> str:
         return f"({self.x}, {self.y})"

@@ -122,7 +122,7 @@ rl.init_window(800, 450, "The Manor Claire")
 rl.set_window_state(rl.ConfigFlags.FLAG_WINDOW_RESIZABLE)
 
 # See font.py for my rant on fonts
-draw_font = font.load_jagged_ttf("font/unscii-16.ttf", 16);
+draw_font = font.load_jagged_ttf("static/unscii-16.ttf", 16);
 
 while not rl.window_should_close():
     root.reflow_layout(Vector2(

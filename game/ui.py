@@ -22,7 +22,10 @@ def ui_process():
     if frame % 3 != 0: return
     
     line = print_queue.pop(0)
-    text_container.children.append(TextRenderable(line))
+    TextRenderable(line, parent=text_container)
+
+def clear_lines() -> None:
+    text_container.clear_children()
 
 ui_root = EmptyRenderable()
 bg_img = ImageRenderable("static/bg/manor_fireplace.jpg", parent=ui_root)

@@ -28,38 +28,48 @@ Renderable.font = font.load_jagged_ttf("static/unscii-16.ttf", 16);
 input_box.static_size = input_box.measure()
 input_box.on_submit = run_command
 
-print_line(RichText([
-    RichTextChunk("Welcome to "),
-    RichTextChunk("The Manor Claire", color=rl.BEIGE),
-    RichTextChunk("."),
-]))
-print_line("This is a text-based game with some visuals for atmosphere, made for CSC 1313.")
-print_line("It's a little over-engineered and has some cool features. Check out README.md for more information.")
-print_line("The UI is reactive, so feel free to resize. You can also fullscreen with F11.")
-print_line("")
-print_line(RichText([
-    RichTextChunk("Would you like to "),
-    RichTextChunk("play", color=rl.ORANGE),
-    RichTextChunk("? Perhaps "),
-    RichTextChunk("load", color=rl.ORANGE),
-    RichTextChunk(" an existing save file? Or maybe join a "),
-    RichTextChunk("multiplayer", color=rl.ORANGE),
-    RichTextChunk(" lobby?"),
-]))
+def main_menu():
+    print_line(RichText([
+        RichTextChunk("Welcome to "),
+        RichTextChunk("The Manor Claire", color=rl.BEIGE),
+        RichTextChunk("."),
+    ]))
+    print_line("This is a text-based game with some visuals for atmosphere, made for CSC 1313.")
+    print_line("It's a little over-engineered and has some cool features. Check out README.md for more information.")
+    print_line("The UI is reactive, so feel free to resize. You can also fullscreen with F11.")
+    print_line("")
+    print_line(RichText([
+        RichTextChunk("Would you like to "),
+        RichTextChunk("play", color=rl.ORANGE),
+        RichTextChunk("? Perhaps "),
+        RichTextChunk("load", color=rl.ORANGE),
+        RichTextChunk(" an existing save file? Or maybe join a "),
+        RichTextChunk("multiplayer", color=rl.ORANGE),
+        RichTextChunk(" lobby?"),
+    ]))
 
+def intro():
+    print_line(". . .")
+    print_line("You awaken on a dusty couch in the middle of an antiquated sitting room.")
+    print_line("The world around you is dimly illuminated, flickering in and out to the irregular cadence of the fireplace before you.")
+    print_line("The fireplace is lit, but dying. Without it you wont be able to see much of anything.")
+    print_line(" ")
+
+    print_line("You shake yourself awake and sit up. You must decide how to proceed. Perhaps start by [act]look[/act]ing around.")
+
+intro()
 # print_line("Say 'help' or '?' at any time for a guide on how to play the game.")
 
 while not rl.window_should_close():
     if rl.is_key_pressed(rl.KEY_F11):
         rl.toggle_borderless_windowed()
 
+    ui_process()
 
     ui_root.reflow_layout(Vector2(
         rl.get_render_width(),
         rl.get_render_height()
     ))
-
-    ui_process()
 
     rl.begin_drawing()
     rl.clear_background(rl.BLACK)

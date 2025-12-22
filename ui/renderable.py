@@ -25,6 +25,9 @@ class Renderable:
 
     def add_child(self, child: Renderable) -> None:
         self.children.append(child)
+        
+    def clear_children(self) -> None:
+        self.children.clear()
 
     def render_self(self) -> None:
         raise NotImplementedError

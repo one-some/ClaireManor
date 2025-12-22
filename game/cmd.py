@@ -82,6 +82,8 @@ def parse_for_command(command: Command, arg_str: str) -> list:
     return args
 
 def run_command(command_line: str) -> None:
+    print_line(" ")
+
     print_line(RichTextChunk(
         f"> {command_line}",
         color=rl.Color(0xFF, 0xFF, 0xBB, 0xFF)
@@ -108,9 +110,7 @@ def run_command(command_line: str) -> None:
         if not command_line.startswith(starter): continue
 
         arg_str = command_line[len(starter):].strip()
-        print(arg_str)
         args = parse_for_command(command, arg_str)
-        print(args)
         command.execute(args)
 
         break

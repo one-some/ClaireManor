@@ -25,7 +25,7 @@ def ui_process():
     text_container.children.append(TextRenderable(line))
 
 ui_root = EmptyRenderable()
-bg_img = ImageRenderable("static/bg/manor.jpg", parent=ui_root)
+bg_img = ImageRenderable("static/bg/manor_fireplace.jpg", parent=ui_root)
 big_container = VStackContainer(v_align=VAlign.BOTTOM, parent=ui_root)
 input_box = InputRenderable(
     # "[cmd]",

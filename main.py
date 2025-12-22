@@ -35,7 +35,7 @@ print_line(RichText([
 ]))
 print_line("This is a text-based game with some visuals for atmosphere, made for CSC 1313.")
 print_line("It's a little over-engineered and has some cool features. Check out README.md for more information.")
-print_line("The UI is reactive, feel free to resize.")
+print_line("The UI is reactive, so feel free to resize. You can also fullscreen with F11.")
 print_line("")
 print_line(RichText([
     RichTextChunk("Would you like to "),
@@ -50,6 +50,10 @@ print_line(RichText([
 # print_line("Say 'help' or '?' at any time for a guide on how to play the game.")
 
 while not rl.window_should_close():
+    if rl.is_key_pressed(rl.KEY_F11):
+        rl.toggle_borderless_windowed()
+
+
     ui_root.reflow_layout(Vector2(
         rl.get_render_width(),
         rl.get_render_height()

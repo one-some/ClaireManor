@@ -116,5 +116,5 @@ def run_command(command_line: str) -> None:
         break
     else:
         # TODO: More helpful errors with like Levenshtein distance
-        print_line("Huh? I don't get that command.")
+        print_line("Huh? I don't get that command. Try asking for <act>help</act>.")
 

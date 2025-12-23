@@ -55,7 +55,7 @@ def intro():
     print_line("The fireplace is lit, but dying. Without it you wont be able to see much of anything.")
     print_line(" ")
 
-    print_line("You shake yourself awake and sit up. You must decide how to proceed. Perhaps start by [act]look[/act]ing around.")
+    print_line("You shake yourself awake and sit up. You must decide how to proceed. Perhaps start by <act>look</act>ing around.")
 
 intro()
 # print_line("Say 'help' or '?' at any time for a guide on how to play the game.")

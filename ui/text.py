@@ -31,9 +31,65 @@ class RichText:
             return cls([value])
         assert False
 
+    @staticmethod
+    def tag_to_style(tag: str) -> rl.Color:
+        # NOTE: "style" is currently just color. In the future I want to support
+        # many types of text styling: sizes, brightness, animations, bg color,
+        # gradients, masks, etc...
+
+        match tag:
+            case "act":
+                return rl.ORANGE
+
+        raise RuntimeError(f"Unexpected tag '{tag}'")
+
     @classmethod
     def from_str(cls, string: str) -> list[RichTextChunk]:
-        return cls([RichTextChunk(string)])
+        default = {"type": "text", "content": ""}
+        bits = [dict(default)]
+
+        for char in string:
+            if char == "<":
+                new = dict(default)
+                new["type"] = "tag"
+                bits.append(new)
+                continue
+            elif char == ">":
+                assert bits[-1]["type"] == "tag"
+                bits.append(dict(default))
+                continue
+            bits[-1]["content"] += char
+
+        # Could be one pass if I hated myself
+        out = []
+        style_stack = []
+
+        for bit in bits:
+            if bit["type"] == "text":
+                # I wish there was a .get for lists
+                color = style_stack[-1]["color"] if style_stack else rl.WHITE
+                out.append(RichTextChunk(bit["content"], color=color))
+                continue
+
+            # Tag
+            assert bit["type"] == "tag"
+            assert bit["content"]
+
+            closing = bit["content"][0] == "/"
+            tag_name = bit["content"].lstrip("/")
+
+            if closing:
+                assert style_stack
+                assert style_stack[-1]["tag"] == tag_name
+                style_stack.pop()
+                continue
+
+            style_stack.append({
+                "tag": tag_name,
+                "color": cls.tag_to_style(tag_name)
+            })
+
+        return out
 
     def get_raw(self) -> str:
         return "".join([n.text for n in self.nodes])

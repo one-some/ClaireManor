@@ -28,7 +28,7 @@ def clear_lines() -> None:
     text_container.clear_children()
 
 ui_root = EmptyRenderable()
-bg_img = ImageRenderable("static/bg/manor_fireplace.jpg", parent=ui_root)
+bg_img = ImageRenderable("static/bg/village_square.png", parent=ui_root)
 big_container = VStackContainer(v_align=VAlign.BOTTOM, parent=ui_root)
 input_box = InputRenderable(
     # "[cmd]",

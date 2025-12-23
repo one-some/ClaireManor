@@ -40,6 +40,8 @@ class RichText:
         match tag:
             case "act":
                 return rl.ORANGE
+            case "noun":
+                return rl.WHITE
 
         raise RuntimeError(f"Unexpected tag '{tag}'")
 
@@ -67,7 +69,7 @@ class RichText:
         for bit in bits:
             if bit["type"] == "text":
                 # I wish there was a .get for lists
-                color = style_stack[-1]["color"] if style_stack else rl.WHITE
+                color = style_stack[-1]["color"] if style_stack else rl.LIGHTGRAY
                 out.append(RichTextChunk(bit["content"], color=color))
                 continue
 
@@ -98,15 +100,57 @@ class TextRenderable(Renderable):
     def __init__(self, text: str | RichText, **kwargs):
         super().__init__(**kwargs)
         self.text = RichText.from_value(text)
+        self.inserted_break_indices = []
+
+    def reflow_layout_self(self, allocated_size: Vector2) -> None:
+        # Calculate text wrapping. Probably expensive w/ these ffi calls!!!
+        self.inserted_break_indices.clear()
+        last_space_index = -1
+        line_width = 0.0
+
+        for i, char in enumerate(self.text.get_raw()):
+            glyph_index = rl.get_glyph_index(self.font, ord(char))
+            line_width += self.font.glyphs[glyph_index].advanceX
+
+            if char == " ":
+                last_space_index = i
+            elif char == "\n":
+                line_width = 0.0
+                last_space_index = -1
+
+            if line_width > allocated_size.x:
+                if last_space_index == -1:
+                    # break on letter if needed
+                    self.inserted_break_indices.append(i)
+                else:
+                    self.inserted_break_indices.append(last_space_index)
+                last_space_index = -1
+                line_width = 0.0
+
+    def get_wrapped_chunk_text(self) -> dict:
+        # TODO: Cache per frame/inserted_break_indices
+        out = {}
+        big_i = 0
+
+        for chunk in self.text.nodes:
+            text = ""
+            for char in chunk.text:
+                text += char
+                if big_i in self.inserted_break_indices:
+                    text += "\n"
+                big_i += 1
+            out[chunk] = text
+
+        return out
 
     def render_self(self) -> None:
         pointer = self.position.copy()
 
-        for chunk in self.text.nodes:
-            lines = chunk.text.split("\n")
+        for chunk, text in self.get_wrapped_chunk_text().items():
+            lines = text.split("\n")
 
             while lines:
-                line = lines.pop()
+                line = lines.pop(0)
                 box = Vector2.from_raylib(rl.measure_text_ex(
                     self.font,
                     line,
@@ -133,7 +177,7 @@ class TextRenderable(Renderable):
     def measure(self) -> Vector2:
         return Vector2.from_raylib(rl.measure_text_ex(
             self.font,
-            self.text.get_raw(),
+            "".join(self.get_wrapped_chunk_text().values()),
             self.font.baseSize,
             0,
         ))

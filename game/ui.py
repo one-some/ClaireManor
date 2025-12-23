@@ -31,8 +31,8 @@ ui_root = EmptyRenderable()
 bg_img = ImageRenderable("static/bg/village_square.png", parent=ui_root)
 big_container = VStackContainer(v_align=VAlign.BOTTOM, parent=ui_root)
 input_box = InputRenderable(
-    # "[cmd]",
-    "[dialog -> Villager]",
+    "[cmd]",
+    # "[dialog -> Villager]",
     parent=big_container,
 )
 text_container = VStackContainer(v_align=VAlign.BOTTOM, parent=big_container)

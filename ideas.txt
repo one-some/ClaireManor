@@ -1,0 +1,101 @@
+Items can have attributes:
+- Worn:
+	+ Resistance (Stamina)
+	- Damage
+- Immaculate:
+	- Resistance
+	+ Damage
+- Fireborne
+	+ Fire damage
+- Cankered
+	+ Rot
+- Unsteady (? Frustrating)
+	- Accuracy
+- Dominant
+	+ Damage
+
+Wake up on Couch.
+Couch: Can see items on table
+Table:
+	- Matchbook
+	- Worn Silver Dagger
+	- Pouch of 27g
+
+Once you've picked everything up, rats will attack.
+Kill them for coins and rat meat (edible!)
+Food replenishes health and vitality (ability to heal health naturally)
+
+Once this is over you faint and once again awaken on the couch. This time, some ambient light shines through blinds.
+You are free to leave the house now. And go wherever
+
+Be really vague with the story so it doesn't feel like loose ends are super obvious
+
+You will not be able to purchase board at the inn. The innkeep will reject you for reasons he doesn't fully articulate.
+Also, everyone treats you a little weird. Maybe really weird
+
+Entryway:
+	Living Room
+	Kitchen
+	Long Hall
+	Front Yard
+
+Living Room:
+	Entryway
+	Library
+	Dining Room
+
+Kitchen:
+	Entryway
+	Dining Room
+	Cellar
+
+Dining Room:
+	Kitchen
+	Living Room
+	Garden
+
+Long Hall:
+	Entryway
+	Bedroom (girl) (chance to see SKELETON!! OR SOMETHING EQUALLY SCARY!)
+	Bedroom (boy)
+	Bedroom (master)
+
+Front Yard:
+	Entryway
+	Garden
+
+	Village (15 min) (Village Square)
+
+Village Square:
+	Manor (Front Yard) (15 min)
+
+	Well
+	Square (Speeches?)
+	Inn
+	General Store
+	Cemetary
+	Clinic
+
+	Residential District
+
+	Forest
+
+Forest:
+	(Paths must be unlocked by exploration. Some paths are not able to be reliably revisited.)
+	Forest Deep
+	Amphitheater Ruins
+	Ancient Pillars
+	Well
+
+Forest Deep:
+	Forest
+	(Paths must be unlocked by exploration)
+	Temple
+	Cultist Encampment
+
+Forest Dark:
+	Forest Deep
+	(Paths must be unlocked by exploration)
+	Birdcage
+	Unmarked Graves
+

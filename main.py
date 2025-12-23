@@ -10,7 +10,6 @@ rl.init_window(800, 450, "The Manor Claire")
 rl.set_target_fps(60)
 rl.set_window_state(rl.ConfigFlags.FLAG_WINDOW_RESIZABLE)
 
-
 import font
 from game.cmd import run_command
 from ui.vector2 import Vector2
@@ -50,9 +49,13 @@ def main_menu():
 
 def intro():
     print_line(". . .")
-    print_line("You awaken on a dusty couch in the middle of an antiquated sitting room.")
-    print_line("The world around you is dimly illuminated, flickering in and out to the irregular cadence of the fireplace before you.")
-    print_line("The fireplace is lit, but dying. Without it you wont be able to see much of anything.")
+    print_line(
+        "You awaken on a dusty couch in the middle of an antiquated sitting " \
+        "room. The world around you is dimly illuminated, flickering in and " \
+        "out to the irregular cadence of the fireplace before you. The " \
+        "fireplace is lit, but dying. Without it you wont be able to see " \
+        "much of anything."
+    )
     print_line(" ")
 
     print_line("You shake yourself awake and sit up. You must decide how to proceed. Perhaps start by <act>look</act>ing around.")

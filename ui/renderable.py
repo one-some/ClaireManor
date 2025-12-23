@@ -40,8 +40,12 @@ class Renderable:
         self.render_self()
 
     def reflow_layout(self, allocated_size: Vector2) -> None:
+        self.reflow_layout_self(allocated_size)
         for child in self.children:
             child.reflow_layout(allocated_size)
+
+    def reflow_layout_self(self, allocated_size: Vector2) -> None:
+        pass
 
     def measure(self) -> Vector2:
         # Content size

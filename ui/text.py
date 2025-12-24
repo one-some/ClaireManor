@@ -4,6 +4,7 @@ import pyray as rl
 from ui.vector2 import Vector2
 from ui.renderable import Renderable
 from typing import Optional, Callable
+from game import state
 
 class RichTextChunk:
     def __init__(
@@ -37,13 +38,13 @@ class RichText:
         # many types of text styling: sizes, brightness, animations, bg color,
         # gradients, masks, etc...
 
-        match tag:
-            case "act":
-                return rl.ORANGE
-            case "noun":
-                return rl.WHITE
-
-        raise RuntimeError(f"Unexpected tag '{tag}'")
+        return {
+            "act": rl.ORANGE,
+            "noun": rl.WHITE,
+            "red": rl.RED,
+            "gray": rl.GRAY,
+            "darkgreen": rl.DARKGREEN
+        }[tag]
 
     @classmethod
     def from_str(cls, string: str) -> list[RichTextChunk]:
@@ -197,16 +198,28 @@ class InputRenderable(Renderable):
         self.history = []
         self.history_idx = 0
 
+    def get_used_text(self) -> str:
+        if self.buffer:
+            return self.buffer
+
+        if state.input_prompt:
+            return state.input_prompt
+
+        return self.placeholder
+
     def measure(self) -> Vector2:
         return Vector2.from_raylib(rl.measure_text_ex(
             self.font,
-            self.buffer or self.placeholder,
+            self.get_used_text(),
             self.font.baseSize,
             0,
         ))
 
-    def render_self(self) -> None:
-        # Let's maybe not do tooo much logic in render. but whatever
+    def process(self) -> None:
+        if state.enter_future:
+            if rl.is_key_pressed(rl.KEY_ENTER):
+                state.enter_future.set_result(None)
+            return
 
         while char := rl.get_char_pressed():
             self.buffer += chr(char)
@@ -228,10 +241,13 @@ class InputRenderable(Renderable):
                 # Type something!
                 return
 
-            self.history.append(self.buffer)
+            if state.input_future:
+                state.input_future.set_result(self.buffer)
+            else:
+                self.history.append(self.buffer)
 
-            if self.on_submit:
-                self.on_submit(self.buffer)
+                if self.on_submit:
+                    self.on_submit(self.buffer)
 
             self.buffer = ""
             self.history_idx = 0
@@ -255,13 +271,15 @@ class InputRenderable(Renderable):
             else:
                 self.buffer = self.history[self.history_idx]
 
-        chunk = RichTextChunk(self.buffer)
+
+    def render_self(self) -> None:
+        # Let's maybe not do tooo much logic in render. but whatever
+        self.process()
+
+        chunk = RichTextChunk(self.get_used_text())
 
         if not self.buffer:
-            chunk = RichTextChunk(
-                self.placeholder,
-                color=rl.GRAY
-            )
+            chunk.color = rl.GRAY
 
         rl.draw_text_ex(
             self.font,

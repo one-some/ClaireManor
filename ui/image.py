@@ -18,10 +18,7 @@ class ImageRenderable(Renderable):
 
         self.scale = 1.0
 
-    def reflow_layout(self, allocated_size: Vector2) -> None:
-        for child in self.children:
-            child.reflow_layout(allocated_size)
-
+    def reflow_layout_self(self, allocated_size: Vector2) -> None:
         self.scale = max(
             allocated_size.x / self.texture.width,
             allocated_size.y / self.texture.height,

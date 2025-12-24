@@ -15,7 +15,7 @@ class Container(Renderable):
         super().__init__(**kwargs)
 
     def render(self):
-        for child in self.children:
+        for child in self.active_children:
             child.render()
 
     def render_self(self) -> None:
@@ -26,16 +26,16 @@ class Container(Renderable):
 
     def measure(self) -> Vector2:
         # For now, containers are guaranteed their target size
-        return self.static_size or Vector2(0, 0)
+        return self.static_size or self._cached_reflow_size
 
 class VStackContainer(Container):
     def reflow_layout(self, allocated_size: Vector2) -> None:
         self._cached_reflow_size = allocated_size
 
-        wiggle_room = allocated_size.y - (self.gap * (len(self.children) - 1))
-        dynamic_children = len(self.children)
+        wiggle_room = allocated_size.y - (self.gap * (len(self.active_children) - 1))
+        dynamic_children = len(self.active_children)
 
-        for child in self.children:
+        for child in self.active_children:
             if not child.static_size:
                 continue
 
@@ -43,7 +43,7 @@ class VStackContainer(Container):
             child.reflow_layout(Vector2(allocated_size.x, child.static_size.y))
             dynamic_children -= 1
 
-        for child in self.children:
+        for child in self.active_children:
             if child.static_size:
                 continue
             child.reflow_layout(Vector2(
@@ -54,7 +54,7 @@ class VStackContainer(Container):
         assert self.v_align != VAlign.CENTER
 
         pos_y = 0
-        iterator = self.children
+        iterator = self.active_children
 
         if self.v_align == VAlign.BOTTOM:
             pos_y = allocated_size.y

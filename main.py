@@ -11,10 +11,20 @@ rl.set_target_fps(60)
 rl.set_window_state(rl.ConfigFlags.FLAG_WINDOW_RESIZABLE)
 
 import font
+import asyncio
 from game.cmd import run_command
 from ui.vector2 import Vector2
 from ui.renderable import Renderable
-from game.ui import ui_root, print_line, input_box, ui_process
+from game import ui
+from game import battle
+from game.ui import (
+    ui_root,
+    print_line,
+    input_box,
+    ui_process,
+    enter_to_continue,
+    prompt
+)
 
 # TODO:
 
@@ -25,6 +35,7 @@ Renderable.font = font.load_jagged_ttf("static/unscii-16.ttf", 16);
 # HACK: Set input_box's static size to it's measurement to prevent weird sizing
 # HACK: Also has to be down here because of delayed font loading :(
 input_box.static_size = input_box.measure()
+ui.battle_stats.static_size = ui.battle_stats.measure()
 input_box.on_submit = run_command
 
 def main_menu():
@@ -47,7 +58,7 @@ def main_menu():
         RichTextChunk(" lobby?"),
     ]))
 
-def intro():
+async def intro():
     print_line(". . .")
     print_line(
         "You awaken on a dusty couch in the middle of an antiquated sitting " \
@@ -60,24 +71,45 @@ def intro():
 
     print_line("You shake yourself awake and sit up. You must decide how to proceed. Perhaps start by <act>look</act>ing around.")
 
-intro()
-# print_line("Say 'help' or '?' at any time for a guide on how to play the game.")
+    battle.start_battle()
 
-while not rl.window_should_close():
-    if rl.is_key_pressed(rl.KEY_F11):
-        rl.toggle_borderless_windowed()
+    # print_line("nevermind. Here comes to Monster.")
+    # await enter_to_continue()
+    # print_line("Nope. Wait, what was your name again?")
+    # name = await prompt("name?")
+    # print_line(f"Oh, hi {name}")
 
-    ui_process()
+async def render_and_process():
+    while not rl.window_should_close():
+        if rl.is_key_pressed(rl.KEY_F11):
+            rl.toggle_borderless_windowed()
 
-    ui_root.reflow_layout(Vector2(
-        rl.get_render_width(),
-        rl.get_render_height()
-    ))
+        ui_process()
 
-    rl.begin_drawing()
-    rl.clear_background(rl.BLACK)
+        ui_root.reflow_layout(Vector2(
+            rl.get_render_width(),
+            rl.get_render_height()
+        ))
 
-    ui_root.render()
+        rl.begin_drawing()
+        rl.clear_background(rl.BLACK)
 
-    rl.end_drawing()
-rl.close_window()
+        ui_root.render()
+
+        rl.end_drawing()
+
+        # Yield
+        await asyncio.sleep(0)
+
+    rl.close_window()
+
+async def story():
+    await intro()
+
+async def main():
+    await asyncio.gather(
+        story(),
+        render_and_process()
+    )
+
+asyncio.run(main())

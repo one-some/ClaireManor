@@ -24,7 +24,7 @@ CHARS = "abcdefghijklmnopqrstuvwxyz"
 CHARS += CHARS.upper()
 CHARS += "01234567890"
 CHARS += "!@#$%^&*()_+-=`~,.<>;':\"/?[]{}\\|"
-CHARS += "░▒▓🯆"
+CHARS += "░▒▓🯆█▌"
 CODEPOINTS = tuple(ord(c) for c in CHARS)
 
 def load_jagged_ttf(file_name: str, font_size: int):

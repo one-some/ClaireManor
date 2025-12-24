@@ -82,9 +82,9 @@ big_container = VStackContainer(
 
 battle_stats = TextRenderable(
     RichText.from_value(
-        "<gray>▓   🯆 </gray>YOU - [LEVEL 26]\n" \
-        "<gray>▓ HP: </gray><red>100</red> " \
-        "<gray>STAM: </gray><darkgreen>100</darkgreen>"
+        "<gray>▓     🯆 </gray>YOU - [LEVEL 26]\n" \
+        "<gray>▓   HP: </gray><red>100 [█████████▌]</red>\n" \
+        "<gray>▓ STAM: </gray><darkgreen>100</darkgreen>"
     ),
     parent=big_container,
 )

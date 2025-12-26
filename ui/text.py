@@ -155,7 +155,7 @@ class TextRenderable(Renderable):
                 box = Vector2.from_raylib(rl.measure_text_ex(
                     self.font,
                     line,
-                    self.font.baseSize,
+                    self.font_size,
                     0,
                 ))
 
@@ -163,7 +163,7 @@ class TextRenderable(Renderable):
                     self.font,
                     line,
                     pointer.to_raylib(),
-                    self.font.baseSize,
+                    self.font_size,
                     0,
                     chunk.color
                 )
@@ -173,13 +173,13 @@ class TextRenderable(Renderable):
                 # Always add n-1 lines y-wise
                 if lines:
                     pointer.x = 0
-                    pointer.y += self.font.baseSize
+                    pointer.y += self.font_size
 
     def measure(self) -> Vector2:
         return Vector2.from_raylib(rl.measure_text_ex(
             self.font,
             "".join(self.get_wrapped_chunk_text().values()),
-            self.font.baseSize,
+            self.font_size,
             0,
         ))
 
@@ -211,7 +211,7 @@ class InputRenderable(Renderable):
         return Vector2.from_raylib(rl.measure_text_ex(
             self.font,
             self.get_used_text(),
-            self.font.baseSize,
+            self.font_size,
             0,
         ))
 
@@ -285,7 +285,7 @@ class InputRenderable(Renderable):
             self.font,
             chunk.text,
             self.position.to_raylib(),
-            self.font.baseSize,
+            self.font_size,
             0,
             chunk.color
         )

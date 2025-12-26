@@ -6,9 +6,9 @@ from ui.text import RichText, RichTextChunk
 # The window needs to be initalized before about anything can happen
 # without segfaults
 rl.set_trace_log_level(rl.TraceLogLevel.LOG_WARNING)
+rl.set_window_state(rl.ConfigFlags.FLAG_WINDOW_RESIZABLE | rl.ConfigFlags.FLAG_WINDOW_HIGHDPI)
 rl.init_window(800, 450, "The Manor Claire")
 rl.set_target_fps(60)
-rl.set_window_state(rl.ConfigFlags.FLAG_WINDOW_RESIZABLE)
 
 import font
 import asyncio
@@ -31,6 +31,9 @@ from game.ui import (
 # Font loading has to be done after the rl context is initalized. Pretty hacky
 # but whatevs...
 Renderable.font = font.load_jagged_ttf("static/unscii-16.ttf", 16);
+render_scale = rl.get_screen_height() / 720
+Renderable.font_size = round(Renderable.font.baseSize / render_scale / 16) * 16
+print(f"Font Size: {Renderable.font_size}")
 
 # HACK: Set input_box's static size to it's measurement to prevent weird sizing
 # HACK: Also has to be down here because of delayed font loading :(

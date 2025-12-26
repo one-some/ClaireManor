@@ -9,6 +9,7 @@ class Renderable:
     # it dawned upon me that I don't use autocomplete
 
     font: rl.Font
+    font_size: int
 
     def __init__(self, **kwargs) -> None:
         self.position = kwargs.pop("position", Vector2.zero())

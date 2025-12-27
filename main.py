@@ -10,6 +10,7 @@ rl.set_window_state(rl.ConfigFlags.FLAG_WINDOW_RESIZABLE | rl.ConfigFlags.FLAG_W
 rl.init_window(800, 450, "The Manor Claire")
 rl.set_target_fps(60)
 
+import sys
 import font
 import asyncio
 from game.cmd import run_command
@@ -74,7 +75,7 @@ async def intro():
 
     print_line("You shake yourself awake and sit up. You must decide how to proceed. Perhaps start by <act>look</act>ing around.")
 
-    battle.start_battle()
+    await battle.battle_loop()
 
     # print_line("nevermind. Here comes to Monster.")
     # await enter_to_continue()
@@ -105,14 +106,19 @@ async def render_and_process():
         await asyncio.sleep(0)
 
     rl.close_window()
+    sys.exit(0)
 
 async def story():
     await intro()
 
 async def main():
-    await asyncio.gather(
-        story(),
-        render_and_process()
-    )
+    try:
+        await asyncio.gather(
+            story(),
+            render_and_process()
+        )
+    except SystemExit:
+        # A little questionable...
+        pass
 
 asyncio.run(main())

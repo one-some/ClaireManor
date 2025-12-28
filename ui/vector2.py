@@ -20,5 +20,5 @@ class Vector2:
     def copy(self) -> Vector2:
         return Vector2(self.x, self.y)
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f"({self.x}, {self.y})"

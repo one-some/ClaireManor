@@ -4,7 +4,7 @@ from game import ui
 from game import state
 from game import language
 from game.ui import print_line
-from game.language import PronounSet, LanguageProfile
+from game.language import PronounSet, LanguageProfile, MessagePool
 
 import random
 import asyncio
@@ -42,8 +42,8 @@ class RangedStatBattleImposition(BattleImposition):
     def format(self, combatant: Combatant) -> None:
         stat = self.get_stat(combatant)
         amount_str = ("+" if self.amount <= 0 else "-") + str(self.amount)
-        return self.format_pattern % language.format(
-            f"{{Combatant's}} {stat.name}: {amount_str}",
+        return language.format(
+            f"    [{combatant.lang.pretty_name}] " + self.format_pattern % f"{amount_str} ({stat.value}) {stat.name}",
             combatant=combatant.lang
         )
 
@@ -60,6 +60,8 @@ class BattleAction:
     user_impositions = []
     target_impositions = []
     fail_rate = 0.0
+
+    attempt_messages = ["A try was made"]
     fail_messages = ["...But it failed!"]
 
     def __repr__(self) -> str:
@@ -73,17 +75,23 @@ class BattleAction:
         )
 
     def execute(self, user: Combatant, target: Combatant) -> None:
-        print_line(f"{user.lang.name} slashes {target.lang.name}")
+        print_line(
+            language.format(
+                self.attempt_messages.sample(),
+                user=user.lang,
+                target=target.lang,
+                # TODO: SAVE SELF LANG
+                weapon=LanguageProfile(self.name, PronounSet.IT)
+            )
+        )
+
         for r in self.user_impositions:
             r.impose(user)
             print_line(r.format(user))
 
         if random.random() < self.fail_rate:
-            # TODO: Allow for some basic natural language scripting like
-            # {target.posessive} for "your" and "Skeleton's"
-
             message = language.format(
-                random.choice(self.fail_messages),
+                self.fail_messages.sample(),
                 user=user.lang,
                 target=target.lang,
             )
@@ -100,15 +108,37 @@ class SlashAction(BattleAction):
     name = "Slash"
     user_impositions = [StaminaBattleImposition(4)]
     target_impositions = [HealthBattleImposition(14)]
+    fail_rate = 0.20
+
+    attempt_messages = MessagePool([
+        "{User} slashes {Target} with {user.his} {Weapon}"
+    ])
+
+    fail_messages = MessagePool([
+        "{User} {user.misses} {Target}!",
+        "{Target} {target.evades} {User's} slash!",
+        "{User} can't seem to hit {Target}!",
+        "{Target} {target.is} too fast for {User}!",
+        "{Target} {target.dodges} {User's} slash!",
+        "{Target} {target.manages} to escape {User's} slash!",
+    ])
+
+class StabAction(BattleAction):
+    name = "Stab"
+    user_impositions = [StaminaBattleImposition(15)]
+    target_impositions = [HealthBattleImposition(20)]
+    # TODO: BLEEDING
     fail_rate = 0.50
-    fail_messages = [
-        "{user} {user.misses} {target}!",
-        # "{target} {target.evades} {user's} slash!",
-        # "{user} can't seem to hit {target}!",
-        # "{target} is too fast for {user}!",
-        # "{target} {target.dodges} {user's} slash!",
-        # "{target} {target.manages} to escape {user's} slash!",
-    ]
+
+    attempt_messages = MessagePool([
+        "{User} stabs at {Target} with {user.his} {Weapon}"
+    ])
+
+    fail_messages = MessagePool([
+        "{User} {user.misses} {Target}!",
+        "{User} can't seem to hit {Target}!",
+        "{Target} {target.is} too fast for {User}!",
+    ])
 
 class Item:
     pass
@@ -119,9 +149,15 @@ class Weapon(Item):
     def get_eligible_actions(self, user: Combatant, target: Combatant):
         return [a for a in self.static_actions if a.check(user, target)]
 
+class Dagger(Weapon):
+    static_actions = [
+        SlashAction(self),
+        StabAction(self)
+    ]
+
 class Sword(Weapon):
     static_actions = [
-        SlashAction()
+        SlashAction(self)
     ]
 
 class RangedStat:
@@ -149,7 +185,7 @@ class Combatant:
         self.stamina = RangedStat("Stamina", kwargs.pop("max_stamina"))
         self.speed = kwargs.pop("speed")
 
-        self.items = [Sword()]
+        self.items = [Sword(), Dagger()]
 
         self.target = None
 
@@ -170,7 +206,7 @@ class PlayerCombatant(Combatant):
     async def select_target(self, enemies: list[Combatant]) -> Combatant:
         print_line("Select target:")
         for i, enemy in enumerate(enemies):
-            print_line(f"{i + 1}. {enemy.lang.name}")
+            print_line(f"{i + 1}. {enemy.lang.pretty_name}")
 
         range_string = f"1-{len(enemies)}"
 
@@ -236,6 +272,8 @@ class Battle:
                 enemies += party
 
             combatant.target = await combatant.select_target(enemies)
+
+            print_line(" ")
             await combatant.do_move()
 
 
@@ -245,7 +283,7 @@ async def battle_loop():
     battle = Battle([
         [
             PlayerCombatant(
-                lang=LanguageProfile("You", PronounSet.YOU),
+                lang=LanguageProfile("You", PronounSet.YOU, "<gold>%s</gold>"),
                 max_health=100,
                 max_stamina=100,
                 speed=15,
@@ -253,19 +291,19 @@ async def battle_loop():
         ],
         [
             EnemyCombatant(
-                lang=LanguageProfile("Skeleton", PronounSet.IT),
+                lang=LanguageProfile("Skeleton", PronounSet.IT, "<gray>%s</gray>"),
                 max_health=100,
                 max_stamina=100,
                 speed=random.randint(1, 30)
             ),
             EnemyCombatant(
-                lang=LanguageProfile("Silly Skeleton", PronounSet.IT),
+                lang=LanguageProfile("Silly Skeleton", PronounSet.IT, "<gray>%s</gray>"),
                 max_health=100,
                 max_stamina=100,
                 speed=random.randint(1, 30)
             ),
             EnemyCombatant(
-                lang=LanguageProfile("Genius Skeleton", PronounSet.IT),
+                lang=LanguageProfile("Genious Skeleton", PronounSet.IT, "<gray>%s</gray>"),
                 max_health=100,
                 max_stamina=100,
                 speed=random.randint(1, 30)
@@ -273,10 +311,12 @@ async def battle_loop():
         ]
     ])
 
+    print_line("=== It's time to battle! ===")
+    for enemy in battle.parties[1]:
+        print_line(f"You're approached by {enemy.lang.pretty_name}!")
+
     while True:
         await battle.do_turn()
-
-    print_line("It's time to battle!")
 
 def end_battle():
     ui.switch_active_text_container(ui.story_text_container)

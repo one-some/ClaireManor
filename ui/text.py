@@ -43,7 +43,9 @@ class RichText:
             "noun": rl.WHITE,
             "red": rl.RED,
             "gray": rl.GRAY,
-            "darkgreen": rl.DARKGREEN
+            "darkgreen": rl.DARKGREEN,
+            "gold": rl.GOLD,
+            "blue": rl.BLUE,
         }[tag]
 
     @classmethod

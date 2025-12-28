@@ -3,6 +3,39 @@ from __future__ import annotations
 import random
 from enum import Enum
 
+class Capitalization(Enum):
+    # I am writing this specific class really late so if this is rly stupid dont
+    # hold it against me
+    UPPER = 0
+    LOWER = 1
+    TITLE = 2
+
+    @classmethod
+    def get(cls, string: str) -> Capitalization:
+        string = "".join([c for c in string if c.isalpha()])
+
+        if string.islower():
+            return cls.LOWER
+        if string.istitle():
+            return cls.TITLE
+        if string.isupper():
+            return cls.UPPER
+
+        print(f"!! Warn: Idk what to doooo :P with '{string}'")
+        return cls.TITLE
+
+    @staticmethod
+    def to(string: str, capitalization: Capitalization) -> str:
+        match capitalization:
+            case Capitalization.UPPER:
+                return string.upper()
+            case Capitalization.LOWER:
+                return string.lower()
+            case Capitalization.TITLE:
+                # HACK: title case makes "Claire's" into "Claire'S"
+                return string.title().replace("'S", "'s")
+        assert False
+
 class PronounSet(Enum):
     SHE = 0
     HE = 1
@@ -72,12 +105,68 @@ PRONOUN_SET_MAPPING = {
 }
 
 class LanguageProfile:
-    def __init__(self, name: str, pronoun_set: PronounSet) -> None:
+    def __init__(self, name: str, pronoun_set: PronounSet, name_format: str = "%s") -> None:
         self.name = name
         self.pronoun_set = pronoun_set
+        self.name_format = name_format
+
+    @property
+    def pretty_name(self) -> str:
+        return self.name_format % self.name
 
     def __repr__(self) -> str:
         return self.name
+
+class MessagePool:
+    # Lower chances of messages repeating back to back
+    def __init__(self, source: list[str]) -> None:
+        self.source = source
+        assert self.source
+        self.pool = []
+
+    def sample(self) -> str:
+        if not self.pool:
+            self.pool = list(self.source)
+            random.shuffle(self.pool)
+        return self.pool.pop()
+
+def evaluate_tag(raw: str, participants: dict[str, LanguageProfile]) -> str:
+    # Partition won't error if the "." is not present
+    raw_user_key, _, word = raw.partition(".")
+
+    cap = Capitalization.get(raw_user_key)
+    user_key = raw_user_key.lower()
+
+    # {user's}
+    if "'s" in user_key and (plural_user_key := user_key.replace("'s", "")) in participants:
+        user = participants[plural_user_key]
+        if user.pronoun_set == PronounSet.YOU:
+            return Capitalization.to("your", cap)
+        return user.name_format % Capitalization.to(f"{user.name}'s", cap)
+
+    user = participants[user_key]
+    # {user}
+    if not word:
+        return user.name_format % Capitalization.to(user.name, cap)
+
+    # {user.he}
+    if word in PRONOUN_SET_MAPPING:
+        pronoun = PRONOUN_SET_MAPPING[word][user.pronoun_set]
+        return Capitalization.to(pronoun, cap)
+
+    # We also need to handle verb conjugation -_- This is gonna be really 
+    # hacky so sorry to any linguists out I don't mean to hurt your feelings
+
+    # At this point the word should be a verb but I won't install an NLP 
+    # library to assert that... we're gonna trust whoever is writing the 
+    # input string (me) (untrustworthy)
+
+    if PronounSet.is_plural(user.pronoun_set):
+        if word == "is":
+            word = "are"
+        word = word.rstrip("s")
+    return Capitalization.to(word, cap)
+
 
 def format(string: str, **participants: dict[str, LanguageProfile]) -> str:
     assert all([isinstance(x, LanguageProfile) for x in participants.values()])
@@ -108,47 +197,6 @@ def format(string: str, **participants: dict[str, LanguageProfile]) -> str:
         # Tag
         assert bit["type"] == "tag"
         assert bit["content"]
-        
-
-        # Partition won't error if the "." is not present
-        raw_user_key, _, word = bit["content"].partition(".")
-        user_key = raw_user_key.lower()
-
-        # TODO: MATCH CAPITALIZATION!!!
-
-        # {user's}
-        if "'s" in user_key and (user_key := bit["content"].replace("'s", "")) in participants:
-            user = participants[user_key]
-            if user.pronoun_set == PronounSet.YOU:
-                out += "your"
-            else:
-                out += f"{user.name}'s"
-            continue
-
-        user = participants[user_key]
-        # {user}
-        if not word:
-            out += user.name
-            continue
-
-        # {user.he}
-        if word in PRONOUN_SET_MAPPING:
-            out += PRONOUN_SET_MAPPING[word][user.pronoun_set]
-            continthemselfue
-
-        # We also need to handle verb conjugation -_- This is gonna be really 
-        # hacky so sorry to any linguists out I don't mean to hurt your feelings
-
-        # At this point the word should be a verb but I won't install an NLP 
-        # library to assert that... we're gonna trust whoever is writing the 
-        # input string (me) (untrustworthy)
-
-        print(word, user.name, user.pronoun_set)
-        if PronounSet.is_plural(user.pronoun_set):
-            print("s")
-            out += word.rstrip("s")
-        else:
-            print("AAA")
-            out += word
+        out += evaluate_tag(bit["content"], participants)
 
     return out

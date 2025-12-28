@@ -81,7 +81,7 @@ class BattleAction:
                 user=user.lang,
                 target=target.lang,
                 # TODO: SAVE SELF LANG
-                weapon=LanguageProfile(self.name, PronounSet.IT)
+                # weapon=LanguageProfile(self.name, PronounSet.IT)
             )
         )
 
@@ -111,7 +111,8 @@ class SlashAction(BattleAction):
     fail_rate = 0.20
 
     attempt_messages = MessagePool([
-        "{User} slashes {Target} with {user.his} {Weapon}"
+        # "{User} slashes {Target} with {user.his} {Weapon}"
+        "{User} slashes {Target}"
     ])
 
     fail_messages = MessagePool([
@@ -131,7 +132,8 @@ class StabAction(BattleAction):
     fail_rate = 0.50
 
     attempt_messages = MessagePool([
-        "{User} stabs at {Target} with {user.his} {Weapon}"
+        # "{User} stabs at {Target} with {user.his} {Weapon}"
+        "{User} stabs at {Target}"
     ])
 
     fail_messages = MessagePool([
@@ -151,13 +153,13 @@ class Weapon(Item):
 
 class Dagger(Weapon):
     static_actions = [
-        SlashAction(self),
-        StabAction(self)
+        SlashAction(),
+        StabAction()
     ]
 
 class Sword(Weapon):
     static_actions = [
-        SlashAction(self)
+        SlashAction()
     ]
 
 class RangedStat:

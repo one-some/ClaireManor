@@ -14,7 +14,7 @@ class Command:
         raise NotImplementedError
 
     @staticmethod
-    def execute(arguments: list) -> None:
+    async def execute(arguments: list) -> None:
         raise NotImplementedError
 
     @classmethod
@@ -40,18 +40,18 @@ class HelpCommand(Command):
     description = "Lists all commands (this menu!)"
 
     @staticmethod
-    def execute(arguments: list) -> None:
-        print_line("-- Help --")
+    async def execute(arguments: list) -> None:
+        await print_line("-- Help --")
         for command in commands:
-            print_line(f"{command.to_str()} - {command.description}")
+            await print_line(f"{command.to_str()} - {command.description}")
 
 class ExitCommand(Command):
     pattern = [["quit", "exit", "bye"]]
     description = "Exits the game, if you insist."
 
     @staticmethod
-    def execute(arguments: list) -> None:
-        print_line("Bye!")
+    async def execute(arguments: list) -> None:
+        await print_line("Bye!")
         exit(0)
 
 def get_command_classes():
@@ -81,10 +81,10 @@ def parse_for_command(command: Command, arg_str: str) -> list:
 
     return args
 
-def run_command(command_line: str) -> None:
-    print_line(" ")
+async def run_command(command_line: str) -> None:
+    await print_line(" ")
 
-    print_line(RichTextChunk(
+    await print_line(RichTextChunk(
         f"> {command_line}",
         color=rl.Color(0xFF, 0xFF, 0xBB, 0xFF)
     ))
@@ -111,10 +111,10 @@ def run_command(command_line: str) -> None:
 
         arg_str = command_line[len(starter):].strip()
         args = parse_for_command(command, arg_str)
-        command.execute(args)
+        await command.execute(args)
 
         break
     else:
         # TODO: More helpful errors with like Levenshtein distance
-        print_line("Huh? I don't get that command. Try asking for <act>help</act>.")
+        await print_line("Huh? I don't get that command. Try asking for <act>help</act>.")
 

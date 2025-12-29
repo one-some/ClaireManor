@@ -80,6 +80,11 @@ async def rich_drip_feed(
     start_time = time.monotonic()
 
     while current_len < total_len:
+        if rl.is_key_pressed(rl.KEY_ENTER):
+            # TODO: Go faster or skip?? Which is better!?!?!?!?!?!?!?! XP
+            yield rt
+            return
+
         elapsed_sec = time.monotonic() - start_time
         target_len = int(elapsed_sec * chars_per_second)
         target_len = min(target_len, total_len)
@@ -115,10 +120,15 @@ async def add_dialog(name: str, text: str) -> None:
     await enter_to_continue()
 
 async def print_line(line: RichTextChunk | RichText | str) -> None:
-    text_renderable = TextRenderable("", parent=active_text_container)
+    # I had to get myself to calm down with this one. This function is used like
+    # everywhere so in my mind I was like "this is async creep on CRAZY MODE
+    # STEROIDS" but it functions exactly how I like it with the small side
+    # effect of things in this async game engine actually being async (shocker)
 
-    async for rich in rich_drip_feed(line):
-        text_renderable.text = rich
+    text_renderable = TextRenderable(line, parent=active_text_container)
+
+    # "Thinking" effect
+    await asyncio.sleep(0.1)
 
 def ui_process():
     Fade.step_active()

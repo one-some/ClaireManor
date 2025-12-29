@@ -106,16 +106,22 @@ PRONOUN_SET_MAPPING = {
 
 class LanguageProfile:
     def __init__(self, name: str, pronoun_set: PronounSet, name_format: str = "%s") -> None:
-        self.name = name
+        self.true_name = name
+        self.display_name = name
+
         self.pronoun_set = pronoun_set
         self.name_format = name_format
 
     @property
+    def name(self) -> str:
+        return self.display_name
+
+    @property
     def pretty_name(self) -> str:
-        return self.name_format % self.name
+        return self.name_format % self.display_name
 
     def __repr__(self) -> str:
-        return self.name
+        return self.display_name
 
 class MessagePool:
     # Lower chances of messages repeating back to back

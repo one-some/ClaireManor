@@ -73,7 +73,6 @@ class RichText:
             "red": rl.RED,
             "gray": rl.DARKGRAY,
             "darkgreen": rl.DARKGREEN,
-            "": rl.DARKGREEN,
             "gold": rl.GOLD,
             "blue": rl.BLUE,
             "claire": rl.DARKPURPLE,
@@ -220,7 +219,7 @@ class InputRenderable(Renderable):
             placeholder: str = "",
             on_submit: Optional[Callable] = None,
             **kwargs
-        ):
+    ) -> None:
         super().__init__(**kwargs)
         self.placeholder = placeholder
         self.on_submit = on_submit

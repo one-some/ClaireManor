@@ -74,8 +74,8 @@ class BattleAction:
             all([r.check(target) for r in self.target_impositions])
         )
 
-    def execute(self, user: Combatant, target: Combatant) -> None:
-        print_line(
+    async def execute(self, user: Combatant, target: Combatant) -> None:
+        await print_line(
             language.format(
                 self.attempt_messages.sample(),
                 user=user.lang,
@@ -87,7 +87,7 @@ class BattleAction:
 
         for r in self.user_impositions:
             r.impose(user)
-            print_line(r.format(user))
+            await print_line(r.format(user))
 
         if random.random() < self.fail_rate:
             message = language.format(
@@ -96,12 +96,12 @@ class BattleAction:
                 target=target.lang,
             )
 
-            print_line(f"<red>{message}</red>")
+            await print_line(f"<red>{message}</red>")
             return
 
         for r in self.target_impositions:
             r.impose(target)
-            print_line(r.format(target))
+            await print_line(r.format(target))
 
 
 class SlashAction(BattleAction):
@@ -206,9 +206,9 @@ class Combatant:
 
 class PlayerCombatant(Combatant):
     async def select_target(self, enemies: list[Combatant]) -> Combatant:
-        print_line("Select target:")
+        await print_line("Select target:")
         for i, enemy in enumerate(enemies):
-            print_line(f"{i + 1}. {enemy.lang.pretty_name}")
+            await print_line(f"{i + 1}. {enemy.lang.pretty_name}")
 
         range_string = f"1-{len(enemies)}"
 
@@ -219,14 +219,14 @@ class PlayerCombatant(Combatant):
                 assert num > 0
                 return enemies[int(number) - 1]
             except ValueError:
-                print_line(f"Please choose a <red>number</red> {range_string}! Try again.")
+                await print_line(f"Please choose a <red>number</red> {range_string}! Try again.")
             except (AssertionError, IndexError):
-                print_line(f"Please choose a number <red>{range_string}</red>! Try again.")
+                await print_line(f"Please choose a number <red>{range_string}</red>! Try again.")
 
     async def do_move(self) -> None:
-        print_line("What will you do? (Use <act>help</act> to see your options!)")
+        await print_line("What will you do? (Use <act>help</act> to see your options!)")
         bebebe = await ui.prompt("Behehe")
-        print_line(bebebe)
+        await print_line(bebebe)
 
 
 class EnemyCombatant(Combatant):
@@ -247,10 +247,16 @@ class EnemyCombatant(Combatant):
 
         # TODO: Preference?
         action = random.choice(actions)
-        action.execute(user=self, target=self.target)
+        await action.execute(user=self, target=self.target)
         await asyncio.sleep(2.0)
 
 class Battle:
+    join_messages = MessagePool([
+        "{Guy} {guy.joins} the battle!",
+        "{Guy} {guy.appears} out of nowhere!",
+        "You're approached by {Guy}!",
+    ])
+
     def __init__(self, parties: list[list[Combatant]]) -> None:
         self.parties = parties
         # Infamous "two-party system"
@@ -275,52 +281,77 @@ class Battle:
 
             combatant.target = await combatant.select_target(enemies)
 
-            print_line(" ")
+            await print_line(" ")
             await combatant.do_move()
 
+    async def update_parties(self, new_members: list[list[Combatant]]) -> None:
+        # There's probably a way to not have to iterate over the parties in
+        # various ways 4 times
+        new_combatants = []
+        assert len(new_members) == 2
+        for i, party in enumerate(new_members):
+            self.parties[i] += party
+            new_combatants += party
+
+        # Format [Skeleton, Skeleton] as [Skeleton (1), Skeleton (2)]
+        # TODO: Could we instead distribute random attributes that are
+        # pointless but differentiate?
+        names = {}
+        for party in self.parties:
+            for combatant in party:
+                name = combatant.lang.true_name
+
+                if name not in names:
+                    names[name] = []
+
+                names[name].append(combatant.lang)
+
+        for name, langs in names.items():
+            if len(langs) < 2:
+                continue
+
+            for i, lang in enumerate(langs):
+                lang.display_name = f"{name} ({i + 1})"
+
+        # This must happen after names are fixed
+        for combatant in new_combatants:
+            await print_line(language.format(
+                Battle.join_messages.sample(),
+                guy=combatant.lang
+            ))
+
+def conjure_enemies() -> list[EnemyCombatant]:
+    out = []
+
+    for i in range(3):
+        out.append(EnemyCombatant(
+            lang=LanguageProfile("Skeleton", PronounSet.IT, "<gray>%s</gray>"),
+            max_health=100,
+            max_stamina=100,
+            speed=random.randint(1, 30)
+        ))
+
+    return out
 
 async def battle_loop():
     ui.switch_active_text_container(ui.battle_text_container)
 
-    battle = Battle([
-        [
-            PlayerCombatant(
-                lang=LanguageProfile("You", PronounSet.YOU, "<gold>%s</gold>"),
-                max_health=100,
-                max_stamina=100,
-                speed=15,
-            ),
-        ],
-        [
-            EnemyCombatant(
-                lang=LanguageProfile("Skeleton", PronounSet.IT, "<gray>%s</gray>"),
-                max_health=100,
-                max_stamina=100,
-                speed=random.randint(1, 30)
-            ),
-            EnemyCombatant(
-                lang=LanguageProfile("Silly Skeleton", PronounSet.IT, "<gray>%s</gray>"),
-                max_health=100,
-                max_stamina=100,
-                speed=random.randint(1, 30)
-            ),
-            EnemyCombatant(
-                lang=LanguageProfile("Genious Skeleton", PronounSet.IT, "<gray>%s</gray>"),
-                max_health=100,
-                max_stamina=100,
-                speed=random.randint(1, 30)
-            ),
-        ]
-    ])
+    pc = PlayerCombatant(
+        lang=LanguageProfile("You", PronounSet.YOU, "<gold>%s</gold>"),
+        max_health=100,
+        max_stamina=100,
+        speed=15,
+    )
 
-    print_line("=== It's time to battle! ===")
-    for enemy in battle.parties[1]:
-        print_line(f"You're approached by {enemy.lang.pretty_name}!")
+    battle = Battle([[pc], []])
+
+    await print_line("=== It's time to battle! ===")
+    await battle.update_parties([[], conjure_enemies()])
+
+    await asyncio.sleep(1.0)
 
     while True:
         await battle.do_turn()
 
-def end_battle():
+    await print_line("Bai")
     ui.switch_active_text_container(ui.story_text_container)
-
-    print_line("Bai")

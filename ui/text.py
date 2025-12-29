@@ -6,19 +6,48 @@ from ui.renderable import Renderable
 from typing import Optional, Callable
 from game import state
 
+TEXT_COLOR = rl.Color(0xB0, 0xB0, 0xB0, 0xFF)
+
 class RichTextChunk:
     def __init__(
         self,
         text: str,
-        color: rl.Color = rl.WHITE
+        color: rl.Color = TEXT_COLOR
     ) -> None:
         self.text = text
         self.color = color
 
 class RichText:
     def __init__(self, nodes: list[RichTextChunk]) -> None:
-        assert isinstance(nodes, list)
+        # TODO: Umm... just put from_value here..??!?!?
+        assert isinstance(nodes, list), "Pls remember to use from_value"
         self.nodes = nodes
+
+    def get_n_leading(self, n: int) -> RichText:
+        # Gets leading n characters while preserving rich attributes.
+        # NOTE: May be called a lot for typewriter effect. Be nimble, be quick!
+        # Jump over a candlestick!
+
+        nodes = []
+        for node in self.nodes:
+            partial_node = RichTextChunk("", color=node.color)
+            nodes.append(partial_node)
+
+            for char in node.text:
+                if not n: break
+                partial_node.text += char
+                n -= 1
+
+            if not n:
+                break
+
+        return RichText(nodes)
+
+    def get_raw(self) -> str:
+        return "".join([n.text for n in self.nodes])
+
+    def __len__(self) -> int:
+        return sum([len(n.text) for n in self.nodes])
 
     @classmethod
     def from_value(cls, value: str| RichTextChunk | list[RichTextChunk]) -> RichText:
@@ -42,14 +71,16 @@ class RichText:
             "act": rl.ORANGE,
             "noun": rl.WHITE,
             "red": rl.RED,
-            "gray": rl.GRAY,
+            "gray": rl.DARKGRAY,
             "darkgreen": rl.DARKGREEN,
+            "": rl.DARKGREEN,
             "gold": rl.GOLD,
             "blue": rl.BLUE,
+            "claire": rl.DARKPURPLE,
         }[tag]
 
     @classmethod
-    def from_str(cls, string: str) -> list[RichTextChunk]:
+    def from_str(cls, string: str) -> RichText:
         default = {"type": "text", "content": ""}
         bits = [dict(default)]
 
@@ -72,7 +103,7 @@ class RichText:
         for bit in bits:
             if bit["type"] == "text":
                 # I wish there was a .get for lists
-                color = style_stack[-1]["color"] if style_stack else rl.LIGHTGRAY
+                color = style_stack[-1]["color"] if style_stack else TEXT_COLOR
                 out.append(RichTextChunk(bit["content"], color=color))
                 continue
 
@@ -94,15 +125,13 @@ class RichText:
                 "color": cls.tag_to_style(tag_name)
             })
 
-        return out
-
-    def get_raw(self) -> str:
-        return "".join([n.text for n in self.nodes])
+        return RichText(out)
 
 class TextRenderable(Renderable):
     def __init__(self, text: str | RichText, **kwargs):
         super().__init__(**kwargs)
         self.text = RichText.from_value(text)
+        assert isinstance(self.text, RichText)
         self.inserted_break_indices = []
 
     def reflow_layout_self(self, allocated_size: Vector2) -> None:
@@ -146,8 +175,8 @@ class TextRenderable(Renderable):
 
         return out
 
-    def render_self(self) -> None:
-        pointer = self.position.copy()
+    def render_self(self, position: Vector2) -> None:
+        pointer = position.copy()
 
         for chunk, text in self.get_wrapped_chunk_text().items():
             lines = text.split("\n")
@@ -174,7 +203,7 @@ class TextRenderable(Renderable):
 
                 # Always add n-1 lines y-wise
                 if lines:
-                    pointer.x = 0
+                    pointer.x = position.x
                     pointer.y += self.font_size
 
     def measure(self) -> Vector2:
@@ -274,7 +303,7 @@ class InputRenderable(Renderable):
                 self.buffer = self.history[self.history_idx]
 
 
-    def render_self(self) -> None:
+    def render_self(self, position: Vector2) -> None:
         # Let's maybe not do tooo much logic in render. but whatever
         self.process()
 
@@ -286,7 +315,7 @@ class InputRenderable(Renderable):
         rl.draw_text_ex(
             self.font,
             chunk.text,
-            self.position.to_raylib(),
+            position.to_raylib(),
             self.font_size,
             0,
             chunk.color

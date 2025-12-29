@@ -4,32 +4,47 @@ from ui.renderable import Renderable
 
 # NOTE: Hardcoded for bg image...
 class ImageRenderable(Renderable):
-    def __init__(self, path: str, **kwargs):
+    def __init__(
+            self,
+            path: str,
+            is_bg_image: bool = False,
+            scale: float = 1.0,
+            **kwargs
+        ):
+        self.scale = scale
         super().__init__(**kwargs)
 
         image = rl.load_image(path)
-        factor = rl.get_render_width() // image.width
+        self.is_bg_image = is_bg_image
 
-        rl.image_resize(image, image.width * factor, image.height * factor)
-        rl.image_blur_gaussian(image, 10)
+        if is_bg_image:
+            factor = rl.get_render_width() // image.width
+            rl.image_resize(image, image.width * factor, image.height * factor)
+            rl.image_blur_gaussian(image, 10)
 
         self.texture = rl.load_texture_from_image(image)
         rl.unload_image(image)
 
-        self.scale = 1.0
+    def measure(self) -> Vector2:
+        if self.is_bg_image:
+            return Vector2.zero()
+        return Vector2(self.texture.width * self.scale, self.texture.height * self.scale)
 
     def reflow_layout_self(self, allocated_size: Vector2) -> None:
-        self.scale = max(
-            allocated_size.x / self.texture.width,
-            allocated_size.y / self.texture.height,
-        )
+        if self.is_bg_image:
+            self.scale = max(
+                allocated_size.x / self.texture.width,
+                allocated_size.y / self.texture.height,
+            )
 
-    def render_self(self) -> None:
+    def render(self, position) -> None:
+        tint = rl.Color(0x44, 0x44, 0x44, 0xFF) if self.is_bg_image else rl.WHITE
+
         rl.draw_texture_ex(
             self.texture,
-            self.position.to_raylib(),
+            position.to_raylib(),
             0.0,
             self.scale,
-            rl.Color(0x44, 0x44, 0x44, 0xFF)
+            tint,
         )
 

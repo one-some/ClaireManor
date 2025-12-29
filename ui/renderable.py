@@ -40,15 +40,17 @@ class Renderable:
     def clear_children(self) -> None:
         self._children.clear()
 
-    def render_self(self) -> None:
+    def render_self(self, position: Vector2) -> None:
         raise NotImplementedError
 
-    def render(self) -> None:
+    def render(self, position) -> None:
+        position = position.copy() + self.position
+
         # Always render children behind parent
         for child in self.active_children:
-            child.render()
+            child.render(position)
 
-        self.render_self()
+        self.render_self(position)
 
     def reflow_layout(self, allocated_size: Vector2) -> None:
         self.reflow_layout_self(allocated_size)
@@ -72,6 +74,25 @@ class Renderable:
 class EmptyRenderable(Renderable):
     # Designed for logical grouping
 
-    def render_self(self) -> None:
+    def render_self(self, position: Vector2) -> None:
         # Won't raise NotImplementedError
         pass
+
+class RectRenderable(Renderable):
+    def __init__(self, color: rl.Color, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.color = color
+
+    def render_self(self, position: Vector2) -> None:
+        rl.draw_rectangle_v(
+            position.to_raylib(),
+            self.static_size.to_raylib(),
+            self.color
+        )
+
+    def measure(self) -> Vector2:
+        return self.static_size
+
+class OverlayRenderable(RectRenderable):
+    def reflow_layout_self(self, allocated_size: Vector2) -> None:
+        self.static_size = allocated_size

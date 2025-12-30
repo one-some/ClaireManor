@@ -128,7 +128,7 @@ async def print_line(line: RichTextChunk | RichText | str) -> None:
     text_renderable = TextRenderable(line, parent=active_text_container)
 
     # "Thinking" effect
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.05)
 
 def ui_process():
     Fade.step_active()
@@ -157,6 +157,22 @@ async def prompt(placeholder: str) -> None:
     state.input_prompt = None
 
     return out
+
+async def ranged_prompt(start: int, end: int) -> None:
+    range_string = f"{start}-{end}"
+    target = None
+    while True:
+        number = await prompt(f"[choose a number {range_string}]")
+        try:
+            num = int(number)
+
+            if num > end or num < start:
+                await print_line(f"Please choose a number <red>{range_string}</red>! Try again.")
+                continue
+
+            return num
+        except ValueError:
+            await print_line(f"Please choose a <red>number</red> {range_string}! Try again.")
 
 def switch_active_text_container(cont: Renderable):
     global active_text_container

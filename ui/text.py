@@ -72,10 +72,13 @@ class RichText:
             "noun": rl.WHITE,
             "red": rl.RED,
             "gray": rl.DARKGRAY,
-            "darkgreen": rl.DARKGREEN,
+            "green": rl.GREEN,
             "gold": rl.GOLD,
             "blue": rl.BLUE,
             "claire": rl.DARKPURPLE,
+            "darkgreen": rl.DARKGREEN,
+            "darkred": rl.Color(0x99, 0x11, 0x11, 0xFF),
+            "darkblue": rl.DARKBLUE,
         }[tag]
 
     @classmethod

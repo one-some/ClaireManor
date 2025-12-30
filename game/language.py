@@ -170,6 +170,11 @@ def evaluate_tag(raw: str, participants: dict[str, LanguageProfile]) -> str:
     if PronounSet.is_plural(user.pronoun_set):
         if word == "is":
             word = "are"
+        
+        # "misses"
+        if word.endswith("es"):
+            word = word[:-2]
+
         word = word.rstrip("s")
     return Capitalization.to(word, cap)
 

@@ -3,9 +3,15 @@ import pyray as rl
 
 from ui.text import RichTextChunk
 from game.io import print_line, prompt
+from etc.utils import get_subclasses
+from game.player import Player
 
 class Location:
-    pass
+    name = ". . ."
+    description = ". . ."
+
+    commands = []
+    objects = []
 
 class Command:
     pattern = [[]]
@@ -61,22 +67,7 @@ class ExitCommand(Command):
         await asyncio.sleep(0.5)
         exit(0)
 
-def get_command_classes():
-    # This is probably overkill idk if I'll even be subclassing
-    out = set()
-    new = [Command]
-
-    while new:
-        cls = new.pop()
-        if cls != Command:
-            out.add(cls)
-        
-        for sub in cls.__subclasses__():
-            if sub in out: continue
-            new.append(sub)
-    return out
-
-commands = get_command_classes()
+commands = get_subclasses(Command)
 
 def parse_for_command(command: Command, arg_str: str) -> list:
     args = []

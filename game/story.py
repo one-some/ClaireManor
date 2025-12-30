@@ -1,10 +1,12 @@
+import asyncio
+
 from game.ui import (
     ui_root,
     input_box,
     ui_process,
     Fade
 )
-from game.io import print_line, prompt
+from game.io import print_line, prompt, clear_lines
 from game.dialog import add_dialog, print_dialog
 
 # Populated by decorators
@@ -59,7 +61,7 @@ async def cutscene_intro() -> None:
     await print_dialog("You cross the threshold into the Manor Claire.")
 
     await Fade(1.0).wait_for()
-    ui.clear_lines()
+    clear_lines()
     await asyncio.sleep(1.0)
     await Fade(0.0).wait_for()
 

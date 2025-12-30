@@ -13,15 +13,15 @@ rl.set_window_state(rl.ConfigFlags.FLAG_WINDOW_RESIZABLE | rl.ConfigFlags.FLAG_W
 rl.init_window(800, 450, "The Manor Claire")
 rl.set_target_fps(60)
 
-import font
-from game.cmd import run_command
+
 from ui.vector2 import Vector2
 from ui.renderable import Renderable
-from ui.text import RichText, RichTextChunk
-from game.io import prompt
+
 from game import ui
-from game import battle
-from game import story
+from game.io import prompt
+from etc import font
+from game.cmd import run_command
+from game.combat import battle
 
 # Font loading has to be done after the rl context is initalized. Pretty hacky
 # but whatevs...
@@ -65,7 +65,6 @@ async def linear():
     # await story.play_cutscene("intro")
 
     while True:
-        print(ui.input_box)
         command_line = await prompt("[cmd]")
         await run_command(command_line)
 

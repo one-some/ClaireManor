@@ -1,7 +1,7 @@
 import pyray as rl
 
 from ui.text import RichTextChunk
-from game.ui import print_line
+from game.io import print_line
 
 class Location:
     pass

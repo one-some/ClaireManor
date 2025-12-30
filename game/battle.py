@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from game import ui
-from game import state
-from game import language
-from game.ui import print_line
-from game.language import PronounSet, LanguageProfile, MessagePool
-
 import random
 import asyncio
 from typing import Optional
+
+from game import io
+from game.io import print_line, choice_prompt
+
+from game import ui
+from game import state
+from game import language
+from game.language import PronounSet, LanguageProfile, MessagePool
 
 class BattleImposition:
     def check(self, combatant: Combatant) -> bool:
@@ -133,7 +135,7 @@ class StabAction(BattleAction):
 
     attempt_messages = MessagePool([
         # "{User} stabs at {Target} with {user.his} {Weapon}"
-        "{User} stabs at {Target}"
+        "{User} {user.stabs} at {Target}"
     ])
 
     fail_messages = MessagePool([
@@ -149,7 +151,7 @@ class PunchAction(BattleAction):
     fail_rate = 0.20
 
     attempt_messages = MessagePool([
-        "{User} swings at {Target}"
+        "{User} {user.swings} at {Target}"
     ])
 
     fail_messages = MessagePool([
@@ -168,13 +170,24 @@ class Item:
         # TODO: Attributes
         return self.format_pattern % self.base_name
 
+    @property
+    def list_formatted(self) -> str:
+        etc = ", ".join([a.name for a in self.static_actions])
+        return f"{self.name} ({etc or '...'})"
+
     def get_eligible_actions(self, user: Combatant, target: Combatant):
         return [a for a in self.static_actions if a.check(user, target)]
 
 class FakeItem(Item):
-    def __init__(self, base_name: str, static_actions: list) -> None:
+    def __init__(
+        self,
+        base_name: str,
+        static_actions: list,
+        format_pattern: str = "%s"
+    ) -> None:
         self.base_name = base_name
         self.static_actions = static_actions
+        self.format_pattern = format_pattern
 
 class Weapon(Item):
     base_name = "Unknown Weapon"
@@ -227,7 +240,20 @@ class Combatant:
             print(kwargs)
             raise RuntimeError("kwargs not exausted")
 
-    def __repr__(self):
+    @property
+    def weapons(self) -> list[Weapon]:
+        return [item for item in self.items if isinstance(item, Weapon)]
+
+    @property
+    def weapons(self) -> list[Weapon]:
+        return [item for item in self.items if isinstance(item, Weapon)]
+
+    @property
+    def non_weapons(self) -> list[Weapon]:
+        # Ooookay this is a litttttle weird
+        return [item for item in self.items if not isinstance(item, Weapon)]
+
+    def __repr__(self) -> str:
         return str(self.__dict__)
     
     async def plan_attack(self, enemies: list[Combatant]) -> (Optional[BattleAction], Optional[Combatant]):
@@ -243,95 +269,71 @@ class PlayerCombatant(Combatant):
     ]
 
     async def choose_target(self, enemies: list[Combatant]) -> Combatant:
-        await print_line("Select target:")
-
         targets = [self] + enemies
-        for i, target in enumerate(targets):
-            await print_line(f"{i + 1}. {target.lang.pretty_name}")
+        return await choice_prompt(
+            "Who will you target?",
+            {target.lang.pretty_name: target for target in targets}
+        )
 
-        await print_line(" ")
-        return targets[await ui.ranged_prompt(1, len(targets)) - 1]
+    async def choose_item_action(self, item: Item) -> Optional[BattleAction]:
+        return await choice_prompt(
+            f"What will you do with {item.name}?",
+            {action.name: action for action in item.static_actions},
+            include_back=True
+        )
 
-    async def print_action_options(self, options: dict) -> Optional[BattleAction]:
-        await print_line(" ")
-        await print_line("What will you use?")
+    async def choose_root_action(self) -> Optional[BattleAction]:
+        flesh_and_bone = FakeItem(
+            "Flesh and Bone",
+            self.base_actions,
+            format_pattern="<darkred>%s</darkred>"
+        )
 
-        for i, (name, v) in enumerate(options.items()):
-            line = f"{i + 1}. {name}"
-
-            # This kinda sucks but whatever
-            etc = ""
-            if v == "ITEMS":
-                etc = ", ".join([a.name for a in self.items if not isinstance(a, Weapon)])
-            elif v == "SKIP":
-                pass
-            elif isinstance(v, Item):
-                etc = ", ".join([a.name for a in v.static_actions])
-
-            if etc:
-                etc = "<gray>(%s)</gray>" % etc
-
-            await print_line(f"{i + 1}. {name} {etc}")
-
-    async def choose_action_from_list(self, actions: list[BattleAction]) -> Optional[BattleAction]:
-        actions = list(actions) + [None]
-
-        for i, action in enumerate(actions):
-            label = action.name if action else "<gray>Back</gray>"
-            await print_line(f"{i + 1}. {label}")
-
-        choice_idx = await ui.ranged_prompt(1, len(actions)) - 1
-        return actions[choice_idx]
-
-    async def choose_item(self) -> Optional[Item]:
-        # This code is so common I need to clean this up
-        items = list(self.items) + [None]
-
-        for i, item in enumerate(items):
-            label = item.name if item else "<gray>Back</gray>"
-            await print_line(f"{i + 1}. {label}")
-
-        choice_idx = await ui.ranged_prompt(1, len(items)) - 1
-        return items[choice_idx]
-
-    async def choose_action(self) -> Optional[BattleAction]:
         options = {
-            **{item.name: item for item in self.items if isinstance(item, Weapon)},
-            "<darkred>Flesh and Bone</darkred>": FakeItem("Flesh and Bone", self.base_actions),
+            **{weapon.list_formatted: weapon for weapon in self.weapons + [flesh_and_bone]},
             "<blue>Items</blue>": "ITEMS",
             "<gray>Skip Turn</gray>": "SKIP",
         }
 
-        # This feels incredibly yucky... but I'm running out of time!
         while True:
-            await self.print_action_options(options)
-            choice_idx = await ui.ranged_prompt(1, len(options)) - 1
-            choice = list(options.values())[choice_idx]
+            choice = await choice_prompt("What will you use?", options)
 
             if choice == "SKIP":
                 return None
-            elif choice == "ITEMS":
-                # AUUUGHHHH!!!
+
+            if isinstance(choice, Item):
+                action = await self.choose_item_action(choice)
+                print("Chose", action)
+                if not action:
+                    continue
+                return action
+
+            if choice == "ITEMS":
                 while True:
-                    await print_line(f"What item would you like to choose?\n")
-                    item = await self.choose_item()
-                    if not item:
+                    inv_item = await choice_prompt(
+                        "Which item will you use?",
+                        {item.list_formatted: item for item in self.non_weapons},
+                        include_back=True
+                    )
+
+                    if not inv_item:
                         break
 
-                    action = await self.choose_action_from_list(item.static_actions)
-                    if action:
-                        return action
+                    action = await self.choose_action(inv_item)
 
-            elif isinstance(choice, Item):
-                await print_line(f"What will you do with {choice.name}?\n")
-                action = await self.choose_action_from_list(choice.static_actions)
-                if action:
+                    if not action:
+                        continue
+
                     return action
+                continue
+            
+            assert False
 
     async def plan_attack(self, enemies: list[Combatant]) -> (Optional[BattleAction], Optional[Combatant]):
         # TODO: Press just enter to do default (last). Remember to invalidate! :3
+        await print_line(" ")
 
-        action = await self.choose_action()
+        action = await self.choose_root_action()
 
         if not action:
             return None, None
@@ -394,7 +396,7 @@ class Battle:
 
             action, target = await combatant.plan_attack(enemies)
             if action and target:
-                await print_line(" ")
+                await print_line("---")
                 await combatant.do_move(action, target)
 
     async def update_parties(self, new_members: list[list[Combatant]]) -> None:

@@ -136,6 +136,23 @@ class MessagePool:
             random.shuffle(self.pool)
         return self.pool.pop()
 
+def third_to_base(verb: str) -> str:
+    if verb == "is": return "are"
+    if verb == "has": return "have"
+    if verb == "does": return "do"
+    
+    if verb.endswith("ies"):
+        return verb[:-3] + "y"
+
+    for suffix in ["sses", "xes", "zes", "ches", "shes"]:
+        if verb.endswith(suffix):
+            return verb[:-2]
+
+    if verb[-1] == "s":
+        return verb[:-1]
+
+    return verb
+
 def evaluate_tag(raw: str, participants: dict[str, LanguageProfile]) -> str:
     # Partition won't error if the "." is not present
     raw_user_key, _, word = raw.partition(".")
@@ -166,16 +183,8 @@ def evaluate_tag(raw: str, participants: dict[str, LanguageProfile]) -> str:
     # At this point the word should be a verb but I won't install an NLP 
     # library to assert that... we're gonna trust whoever is writing the 
     # input string (me) (untrustworthy)
-
     if PronounSet.is_plural(user.pronoun_set):
-        if word == "is":
-            word = "are"
-        
-        # "misses"
-        if word.endswith("es"):
-            word = word[:-2]
-
-        word = word.rstrip("s")
+        word = third_to_base(word)
     return Capitalization.to(word, cap)
 
 

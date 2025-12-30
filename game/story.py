@@ -1,14 +1,11 @@
 from game.ui import (
     ui_root,
-    print_line,
     input_box,
     ui_process,
-    enter_to_continue,
-    prompt,
-    add_dialog,
-    print_dialog,
     Fade
 )
+from game.io import print_line, enter_to_continue, prompt
+from game.dialog import add_dialog, print_dialog
 
 # Populated by decorators
 cutscenes = {}

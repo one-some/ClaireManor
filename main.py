@@ -21,17 +21,6 @@ from ui.renderable import Renderable
 from game import ui
 from game import battle
 from game import story
-from game.ui import (
-    ui_root,
-    print_line,
-    input_box,
-    ui_process,
-    enter_to_continue,
-    prompt,
-    add_dialog,
-    print_dialog,
-    Fade
-)
 
 # Font loading has to be done after the rl context is initalized. Pretty hacky
 # but whatevs...
@@ -41,9 +30,11 @@ Renderable.font_size = round(Renderable.font.baseSize / render_scale / 16) * 16
 
 # HACK: Set input_box's static size to it's measurement to prevent weird sizing
 # HACK: Also has to be down here because of delayed font loading :(
-input_box.static_size = input_box.measure()
+ui.input_box.static_size = ui.input_box.measure()
 ui.battle_stats.static_size = ui.battle_stats.measure()
-input_box.on_submit = run_command
+
+# I want to replace this with a priority queue of removable callbacks
+ui.input_box.on_submit = run_command
 
 
 async def render_and_process():
@@ -51,9 +42,9 @@ async def render_and_process():
         if rl.is_key_pressed(rl.KEY_F11):
             rl.toggle_borderless_windowed()
 
-        ui_process()
+        ui.ui_process()
 
-        ui_root.reflow_layout(Vector2(
+        ui.ui_root.reflow_layout(Vector2(
             rl.get_render_width(),
             rl.get_render_height()
         ))
@@ -61,7 +52,7 @@ async def render_and_process():
         rl.begin_drawing()
         rl.clear_background(rl.BLACK)
 
-        ui_root.render(Vector2.zero())
+        ui.ui_root.render(Vector2.zero())
 
         rl.end_drawing()
 

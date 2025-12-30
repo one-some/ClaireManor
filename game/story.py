@@ -4,7 +4,7 @@ from game.ui import (
     ui_process,
     Fade
 )
-from game.io import print_line, enter_to_continue, prompt
+from game.io import print_line, prompt
 from game.dialog import add_dialog, print_dialog
 
 # Populated by decorators

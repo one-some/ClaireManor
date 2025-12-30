@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import sys
 import pyray as rl
-from ui.text import RichText, RichTextChunk
+import asyncio
 
 print("\nTake a look!\n")
 
@@ -12,12 +13,12 @@ rl.set_window_state(rl.ConfigFlags.FLAG_WINDOW_RESIZABLE | rl.ConfigFlags.FLAG_W
 rl.init_window(800, 450, "The Manor Claire")
 rl.set_target_fps(60)
 
-import sys
 import font
-import asyncio
 from game.cmd import run_command
 from ui.vector2 import Vector2
 from ui.renderable import Renderable
+from ui.text import RichText, RichTextChunk
+from game.io import prompt
 from game import ui
 from game import battle
 from game import story
@@ -32,9 +33,6 @@ Renderable.font_size = round(Renderable.font.baseSize / render_scale / 16) * 16
 # HACK: Also has to be down here because of delayed font loading :(
 ui.input_box.static_size = ui.input_box.measure()
 ui.battle_stats.static_size = ui.battle_stats.measure()
-
-# I want to replace this with a priority queue of removable callbacks
-ui.input_box.on_submit = run_command
 
 
 async def render_and_process():
@@ -63,8 +61,13 @@ async def render_and_process():
     sys.exit(0)
 
 async def linear():
-    await battle.battle_loop()
+    # await battle.battle_loop()
     # await story.play_cutscene("intro")
+
+    while True:
+        print(ui.input_box)
+        command_line = await prompt("[cmd]")
+        await run_command(command_line)
 
 async def main():
     try:

@@ -109,7 +109,7 @@ battle_text_container = VStackContainer(
 )
 
 input_box = InputRenderable(
-    "[cmd]",
+    "[...]",
     # "[dialog -> Villager]",
     parent=big_container,
 )

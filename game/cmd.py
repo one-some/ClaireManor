@@ -1,7 +1,8 @@
+import asyncio
 import pyray as rl
 
 from ui.text import RichTextChunk
-from game.io import print_line
+from game.io import print_line, prompt
 
 class Location:
     pass
@@ -51,7 +52,13 @@ class ExitCommand(Command):
 
     @staticmethod
     async def execute(arguments: list) -> None:
+        await print_line("Really leave?")
+        if (await prompt("[yes/no]")).lower()[0] != "y":
+            await print_line("Okay, then.")
+            return
+
         await print_line("Bye!")
+        await asyncio.sleep(0.5)
         exit(0)
 
 def get_command_classes():

@@ -1,5 +1,12 @@
+import time
+import asyncio
+import pyray as rl
+
+from game import ui
+from game.io import wait_for_enter
 from ui.vector2 import Vector2
 from ui.text import TextRenderable, RichTextChunk, RichText
+from ui.image import ImageRenderable
 from ui.container import VAlign, VStackContainer, HStackContainer, Container
 
 async def rich_drip_feed(
@@ -35,15 +42,15 @@ async def rich_drip_feed(
             await asyncio.sleep(0.0)
 
 async def print_dialog(line: RichTextChunk | RichText | str) -> None:
-    text_renderable = TextRenderable("", parent=active_text_container)
+    text_renderable = TextRenderable("", parent=ui.active_text_container)
 
     async for rich in rich_drip_feed(line):
         text_renderable.text = rich
 
-    await enter_to_continue()
+    await wait_for_enter()
 
 async def add_dialog(name: str, text: str) -> None:
-    container = HStackContainer(padding=Vector2(20, 20), gap=10, parent=active_text_container)
+    container = HStackContainer(padding=Vector2(20, 20), gap=10, parent=ui.active_text_container)
 
     # HACK
     image = ImageRenderable(f"static/portraits/{name.lower()}.png", scale=2.0, parent=container)
@@ -55,4 +62,4 @@ async def add_dialog(name: str, text: str) -> None:
     ):
         text_renderable.text = rich
 
-    await enter_to_continue()
+    await wait_for_enter()

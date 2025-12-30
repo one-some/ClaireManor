@@ -6,6 +6,10 @@ from ui.vector2 import Vector2
 from ui.text import TextRenderable, RichTextChunk, RichText
 from ui.container import VAlign, VStackContainer, HStackContainer, Container
 
+# Convienence mappings
+prompt = ui.input_box.prompt
+wait_for_enter = ui.input_box.wait_for_enter
+
 async def print_line(line: RichTextChunk | RichText | str) -> None:
     # I had to get myself to calm down with this one. This function is used like
     # everywhere so in my mind I was like "this is async creep on CRAZY MODE
@@ -15,32 +19,10 @@ async def print_line(line: RichTextChunk | RichText | str) -> None:
     TextRenderable(line, parent=ui.active_text_container)
 
     # "Thinking" effect
-    await asyncio.sleep(0.05)
+    await asyncio.sleep(0.0025)
 
 def clear_lines() -> None:
     ui.active_text_container.clear_children()
-
-async def enter_to_continue() -> None:
-    state.input_prompt = "[ press enter to continue ]"
-
-    loop = asyncio.get_running_loop()
-    state.enter_future = loop.create_future()
-    await state.enter_future
-
-    state.input_prompt = None
-    state.enter_future = None
-
-async def prompt(placeholder: str) -> None:
-    state.input_prompt = placeholder
-
-    loop = asyncio.get_running_loop()
-    state.input_future = loop.create_future()
-    out = await state.input_future
-
-    state.input_future = None
-    state.input_prompt = None
-
-    return out
 
 async def ranged_prompt(start: int, end: int) -> None:
     range_string = f"{start}-{end}"

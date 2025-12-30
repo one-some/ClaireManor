@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import pyray as rl
+from typing import Optional, Callable
+
 from ui.vector2 import Vector2
 from ui.renderable import Renderable
-from typing import Optional, Callable
-from game import state
 
 TEXT_COLOR = rl.Color(0xB0, 0xB0, 0xB0, 0xFF)
 
@@ -220,23 +221,47 @@ class InputRenderable(Renderable):
     def __init__(
             self,
             placeholder: str = "",
-            on_submit: Optional[Callable] = None,
             **kwargs
     ) -> None:
         super().__init__(**kwargs)
         self.placeholder = placeholder
-        self.on_submit = on_submit
+        self.prompt_str = None
+        self.future = None
+        self.input_disabled = False
+
         self.buffer = ""
 
         self.history = []
         self.history_idx = 0
 
+    async def prompt(self, prompt: str) -> str:
+        self.prompt_str = prompt
+
+        assert not self.future
+        loop = asyncio.get_running_loop()
+        self.future = loop.create_future()
+
+        return await self.future
+
+    async def wait_for_enter(self) -> None:
+        self.input_disabled = True
+        self.prompt_str = "[press enter to continue]"
+
+        assert not self.future
+        loop = asyncio.get_running_loop()
+        self.future = loop.create_future()
+
+        await self.future
+        self.input_disabled = False
+
+        return 
+
     def get_used_text(self) -> str:
         if self.buffer:
             return self.buffer
 
-        if state.input_prompt:
-            return state.input_prompt
+        if self.prompt_str:
+            return self.prompt_str
 
         return self.placeholder
 
@@ -249,9 +274,19 @@ class InputRenderable(Renderable):
         ))
 
     def process(self) -> None:
-        if state.enter_future:
-            if rl.is_key_pressed(rl.KEY_ENTER):
-                state.enter_future.set_result(None)
+        # Submit
+        if rl.is_key_pressed(rl.KEY_ENTER):
+            if self.future:
+                self.future.set_result(self.buffer)
+                self.future = None
+                self.prompt_str = None
+
+            self.history.append(self.buffer)
+
+            self.buffer = ""
+            self.history_idx = 0
+
+        if self.input_disabled:
             return
 
         while char := rl.get_char_pressed():
@@ -266,24 +301,6 @@ class InputRenderable(Renderable):
             )
         ):
             self.buffer = self.buffer[:-1]
-
-
-        # Submit
-        if rl.is_key_pressed(rl.KEY_ENTER):
-            if not self.buffer:
-                # Type something!
-                return
-
-            if state.input_future:
-                state.input_future.set_result(self.buffer)
-            else:
-                self.history.append(self.buffer)
-
-                if self.on_submit:
-                    self.on_submit(self.buffer)
-
-            self.buffer = ""
-            self.history_idx = 0
 
 
         # History

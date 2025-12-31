@@ -75,11 +75,15 @@ class RichText:
             "gray": rl.DARKGRAY,
             "green": rl.GREEN,
             "gold": rl.GOLD,
+            "yellow": rl.YELLOW,
             "blue": rl.BLUE,
             "claire": rl.DARKPURPLE,
             "darkgreen": rl.DARKGREEN,
             "darkred": rl.Color(0x99, 0x11, 0x11, 0xFF),
             "darkblue": rl.DARKBLUE,
+            "palegreen": rl.Color(0x77, 0xA6, 0x84, 0xFF),
+            "paleblue": rl.Color(0x77, 0x80, 0xA6, 0xFF),
+            "paleyellow": rl.Color(0x9E, 0xAB, 0x60, 0xFF),
         }[tag]
 
     @classmethod

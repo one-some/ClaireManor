@@ -1,0 +1,114 @@
+0F:
+: Entryway
+	[Antechamber]
+	- Dusty. No draft.
+	- Door: Looks old but won't budge.
+
+: Antechamber
+	[Stairway:1F, Hatch: -1F, East Hall, West Hall]
+	- Smells distractingly of peat moss
+	- Spiderwebs on the chandiler
+	- Fireplace: Full of ashes, but logs are nearby.
+		- Light: Turns this area into a healing zone
+	- After Darcy note:
+		- You hear a shriek and a thud as a body falls from the balcony above you
+		- Boss fite.
+
+: East Hall
+	[Antechamber, Boudoir, Kitchen, Dining Hall]
+	- Water damage runs down the wallpaper. It peels
+	- Vase: at the end of the hallway on a small end table. Full of water
+		You see something small in the bottom
+		- Fish around in it:
+			- You find a human finger.
+
+: Boudoir
+	[East Hall]
+	- A dark cloud of something disperses as you enter the room.
+	- A chair for lounging. Quite dusty.
+		- Sit:
+			- "You sit for a moment. Your mind feels nimbler seeing the world from a new perspective."
+	- Medium circle table: On it sits two masks.
+		- Choose Comedy Mask
+		- Choose Tragedy Mask
+
+: Kitchen
+	[East Hall, Dining Hall]
+	- Floor is checkerboarded proto-lineolium
+	- Dishes and such are laid about, as if left mid meal-preparation
+	- The room smells of terrible rot
+	- Barrel: The barrel is chained shut. There is no way to open it. BTW the stink comes from here.
+
+: Dining Hall
+	[Kitchen, East Hall, Mudroom]
+	- All the chairs are pulled out. It irks you.
+		- Push them in
+	- There are lots of plates around the table. One is much more yellowed than the rest
+		- Pick up.
+			- A ruined fragment of an old message: "Miss Darcy: You'll have to excuse me
+			for my behavior earlier tonight. As I get older I find myself somehow more sensitive
+			around topics I should be long-numb to. I would love to make up for the trouble somehow.
+			Meet me in my boudoir after the procession concludes tonight. I have something to show you.
+			Not once in my life did I-"
+
+: Mudroom
+	- [Dining Hall]
+	- Your attention is immediately drawn to the red yarn sprawling across the floor. You can barely make out
+	the floor's original tiling. Unraveled piles stretch feet tall.
+		- Pull:
+			- You pull on the string until the section you hold cuts itself off from the pile.
+			Red Yarn Bunch.
+			Slowly turns into a doll.
+			Doll slowly looks more like you
+
+: West Hall
+	- [Antechamber, Sitting Room, Library, Study]
+
+: Sitting Room
+
+: Library
+
+: Study
+
+1F:
+: Stairtop
+	: Halls
+
+: Bed Hall
+
+: Master Bedroom (unused)
+
+: Guest Bedroom #1
+
+: Guest Bedroom #2
+
+: Servant Hall
+
+: Servant Commons
+
+: Servant Shared Bedroom
+
+-1F:
+: Spiral Rotunda
+
+: Administrative Wing
+
+: Office
+
+: Research Library
+
+: Scribe's Quarters
+
+: Maintence Wing
+
+: Laundry Room
+
+: Boiler Room
+
+-2F:
+
+: Hall of Cells (Scary experiments)
+
+: Operating Room (High battle encounter)
+
+: Mass Grave

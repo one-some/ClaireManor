@@ -26,10 +26,13 @@ class Command:
 
         for option_set in cls.pattern:
             clean = []
-            for bit in option_set:
-                # FUTURE: Add Location, Item, etc support
-                assert isinstance(bit, str)
-                clean.append(bit)
+            if not isinstance(option_set, list):
+                clean.append("str")
+            else:
+                for bit in option_set:
+                    # FUTURE: Add Location, Item, etc support
+                    assert isinstance(bit, str)
+                    clean.append(bit)
             out.append("[%s]" % "/".join(clean))
 
         return " ".join(out)
@@ -60,15 +63,70 @@ class ExitCommand(Command):
         await asyncio.sleep(0.5)
         exit(0)
 
+class MoveCommand(Command):
+    pattern = [["move", "go", "goto", "walk"], str]
+    description = "Walk into another room."
+
+    @staticmethod
+    async def execute(arguments: list) -> None:
+        loc_query = arguments[0].lower()
+
+        pathways = Player.player.location.pathways
+        location_kv = {
+            **{k.lower(): v for k, v in pathways.items()},
+            **{v.name.lower(): v for v in pathways.values()},
+        }
+        print(location_kv)
+
+        # Try to squish it until it works. These have to be seperate loops bc
+        # they are prioritized
+        if loc_query not in location_kv:
+            # First, check if *we* start with a location. Maybe a player typed
+            # the whole display string (???)
+            for k in location_kv:
+                if loc_query.startswith(k):
+                    loc_query = k
+                    break
+            else:
+                # Otherwise, let's assume the player is using a shortcut. Maybe
+                # a location starts with *us*.
+                for k in location_kv:
+                    if k.startswith(loc_query):
+                        loc_query = k
+                        break
+
+        if loc_query in location_kv:
+            Player.player.location = location_kv[loc_query]
+            await print_line(f"You go to {Player.player.location.display_name}")
+        else:
+            await print_line(f"I don't know where '{loc_query}' is. Take a look around:")
+            for route, location in pathways.items():
+                await print_line(f"- There is a <paleyellow>{route}</paleyellow> to {location.display_name} here.")
+
+class LookCommand(Command):
+    # Old habits die hard
+    pattern = [["look", "ls"]]
+    description = "Describes the room around you."
+
+    @staticmethod
+    async def execute(arguments: list) -> None:
+        await Player.player.location.describe()
+
 commands = get_subclasses(Command)
 
 def parse_for_command(command: Command, arg_str: str) -> list:
+    # FIXME: Please finish this
     args = []
     expectations = list(command.pattern[1:])
 
     while expectations:
         expectation = expectations.pop(0)
-        pass
+        if expectation == str:
+            print("[WARNING!] Wildcard expectation ignores at least one following")
+            args.append(arg_str)
+            break
+        else:
+            assert False
 
     return args
 

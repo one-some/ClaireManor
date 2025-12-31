@@ -22,6 +22,7 @@ from game.io import prompt
 from etc import font
 from game.cmd import run_command
 from game.combat import battle
+from game.player import Player
 
 # Font loading has to be done after the rl context is initalized. Pretty hacky
 # but whatevs...
@@ -63,6 +64,7 @@ async def render_and_process():
 async def linear():
     # await battle.battle_loop()
     # await story.play_cutscene("intro")
+    await Player.player.location.describe()
 
     while True:
         command_line = await prompt("[cmd]")

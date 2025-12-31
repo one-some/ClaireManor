@@ -85,7 +85,7 @@ class EntrywayLocation(Location):
     floor = 0
 
     pathways = {
-        "archway": "AntechamberLocation"
+        "arched entrance": "AntechamberLocation"
     }
 
     objects = [
@@ -106,14 +106,77 @@ class EntrywayLocation(Location):
 
 class AntechamberLocation(Location):
     name = "Antechamber"
-    description = "The heart of the floor. All other rooms seem to branch out from here. The room itself is oddly sparse."
+    description = "The heart of the house; all other rooms seem to branch out from here. The room itself is oddly sparse, and smells strongly of peat moss. Cobwebs gently adorn the chandelier."
     floor = 0
 
     pathways = {
-        "archway": "EntrywayLocation"
+        "arched exit": "EntrywayLocation",
+        "ever-open doorway": "EastHallLocation",
     }
 
     objects = []
+
+class EastHallLocation(Location):
+    name = "East Hall"
+    description = "The long eastern hallway has striped wallpaper, making the hall appear taller than it actually is. As of recently, though, the wallpaper is peeling due to water damage. A lonely vase sits on the table at the end of the hall."
+    floor = 0
+
+    pathways = {
+        "ever-open doorway": "AntechamberLocation",
+        "beckoningly ajar doorway": "BoudoirLocation",
+        "swinging door": "KitchenLocation",
+    }
+
+    objects = [
+        RoomObject(
+            "Vase",
+            description="Whatever flowers were once in this vase have long disintigrated, but somehow the water remains. <yellow>You see something in the bottom of the water.</yellow>",
+        ),
+    ]
+
+class BoudoirLocation(Location):
+    name = "Boudoir"
+    description = "The powdery air of the boudoir seems to linger after what seems to be decades of disuse. Many objects throughout the room feel out of place in a way that makes you deeply uncomfortable, almost primally so. You are on high alert."
+    floor = 0
+
+    pathways = {
+        "hope of escape": "EastHallLocation"
+    }
+
+    objects = [
+        RoomObject(
+            "Pink Chair",
+            description="For all the discomfort the Boudoir brings you, this chair looks incredibly comfortable. Which is odd, considering it's a glorified lawn chair. You aren't able to reason about your feelings for the chair.",
+        ),
+        RoomObject(
+            "Round Table",
+            description="A medium-sized roundtable. It is the perfect size for a small gathering between close friends, though the scoring and burn marks on the table seem rather uninviting.",
+            item_locations={
+                "atop": [
+                    # TODO: Masks
+                    Sword(),
+                    Sword(),
+                ]
+            }
+        )
+    ]
+
+class KitchenLocation(Location):
+    name = "Kitchen"
+    description = "Immediately upon entering the kitchen you are confronted by a vile miasma. The stench of untempered rot floods your sinuses and you are briefly disoriented. As you come to your senses you're greeted with a small room floored with some sort of checkered proto-linoleum. Mid-completion courses sit decaying on the countertop as if those responsible for finalizing them simply vanished into thin air."
+    floor = 0
+
+    pathways = {
+        "swinging door": "EastHallLocation"
+    }
+
+    objects = [
+        RoomObject(
+            "Barrel",
+            description="The room's stench seems to either concentrate around or eminate from this barrel. The body of the barrel is so severely swolen you fear that the corroded loops will give soon. Pressure builds from within; something is rotting inside.",
+        ),
+    ]
+
 
 # Hydrate first
 for location in [Location] + list(get_subclasses(Location)):

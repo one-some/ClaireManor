@@ -7,7 +7,6 @@ from ui.renderable import Renderable, EmptyRenderable, OverlayRenderable
 from ui.container import VAlign, VStackContainer, HStackContainer, Container
 from ui.text import TextRenderable, InputRenderable, RichTextChunk, RichText
 from ui.image import ImageRenderable
-from game import state
 
 class Fade:
     active_fade = None

@@ -8,7 +8,6 @@ from game import io
 from game.io import print_line, choice_prompt
 
 from game import ui
-from game import state
 from game import language
 from game.player import Player
 from game.language import PronounSet, LanguageProfile, MessagePool

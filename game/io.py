@@ -1,7 +1,6 @@
 import asyncio
 
 from game import ui
-from game import state
 from ui.vector2 import Vector2
 from ui.text import TextRenderable, RichTextChunk, RichText
 from ui.container import VAlign, VStackContainer, HStackContainer, Container

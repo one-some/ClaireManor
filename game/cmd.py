@@ -6,13 +6,6 @@ from game.io import print_line, prompt
 from etc.utils import get_subclasses
 from game.player import Player
 
-class Location:
-    name = ". . ."
-    description = ". . ."
-
-    commands = []
-    objects = []
-
 class Command:
     pattern = [[]]
     description = ". . ."

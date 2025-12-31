@@ -3,6 +3,7 @@ from __future__ import annotations
 from game.language import LanguageProfile, PronounSet
 from game.items.inventory import Inventory
 from game.combat.combatant import PlayerCombatant
+from game.location import EntrywayLocation
 
 class Player:
     player: Player
@@ -10,6 +11,8 @@ class Player:
     def __init__(self) -> None:
         self.lang = LanguageProfile("You", PronounSet.YOU, "<gold>%s</gold>")
         self.inventory = Inventory([])
+
+        self.location = EntrywayLocation
 
         self.combatant = PlayerCombatant(
             lang=self.lang,

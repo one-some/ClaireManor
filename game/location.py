@@ -3,19 +3,25 @@ from __future__ import annotations
 from typing import Optional
 
 from etc.utils import get_subclasses
+from game import language
 from game.io import print_line
 from game.items.item import Item
 from game.items.weapon import Sword
+from game.cmd_base import LocalCommand
+
+# Should be in cmd.py but circular imports and time limits..etc
 
 class RoomObject:
     def __init__(
         self,
         name: str,
         description: Optional[str] = None,
+        commands: Optional[list[LocalCommand]] = None,
         item_locations: Optional[dict[str, Item]] = None,
     ) -> None:
         self.name = name
-        self._description = description
+        self.description = description
+        self.commands = commands or []
         self.item_locations = item_locations or {}
 
     @property
@@ -23,8 +29,29 @@ class RoomObject:
         return f"<paleblue>{self.name}</paleblue>"
 
     @property
-    def description(self) -> str:
-        return self._description or "It's unremarkable."
+    def article(self) -> str:
+        return language.indefinite_article(self.name)
+
+    @property
+    def display_description(self) -> str:
+        return self.description or "It's unremarkable."
+
+    async def describe(self) -> None:
+        await print_line(self.display_name)
+        await print_line(self.display_description)
+
+        if self.commands:
+            await print_line(f"<gray>You can do stuff with the {self.display_name}:</gray>")
+        for command in self.commands:
+            await print_line(f"<gray>-</gray> <act>{command}</act>")
+
+
+        if self.item_locations:
+            await print_line(f"<gray>You see some stuff here:</gray>")
+        for relation, items in self.item_locations.items():
+            for item in items:
+                await print_line(f"<gray>-</gray> {relation.title()} the {self.display_name}, there is a {item.name}.")
+
 
 # Never actually used metaclasses before. Exciting!! This lets us set getters
 # on the actual class itself
@@ -39,6 +66,10 @@ class LocationMeta(type):
     @property
     def display_name(self) -> str:
         return f"[<yellow>{self.name} ({self.floor}F)</yellow>]"
+
+    @property
+    def article(self) -> str:
+        return language.indefinite_article(self.name)
 
     @property
     def display_description(self) -> str:
@@ -68,8 +99,7 @@ class Location(metaclass=LocationMeta):
         if cls.objects:
             await print_line(f"<gray>You see some stuff here:</gray>")
         for obj in cls.objects:
-            # TODO: A/An
-            await print_line(f"<gray>-</gray> There is a {obj.display_name} here.")
+            await print_line(f"<gray>-</gray> There is {obj.article} {obj.display_name} here.")
             for relation, items in obj.item_locations.items():
                 for item in items:
                     await print_line(f"    <gray>-</gray> {relation.title()} the {obj.display_name}, there is a {item.name}.")
@@ -77,7 +107,17 @@ class Location(metaclass=LocationMeta):
         if cls.pathways:
             await print_line(f"<gray>You can move from here:</gray>")
         for route, location in cls.pathways.items():
-            await print_line(f"- There is a <paleyellow>{route}</paleyellow> to {location.display_name} here.")
+            article = language.indefinite_article(route)
+            await print_line(f"- There is {article} <paleyellow>{route}</paleyellow> to {location.display_name} here.")
+
+    @classmethod
+    def applicable_commands(cls) -> list[LocalCommand]:
+        out = []
+
+        for obj in cls.objects:
+            out += obj.commands
+
+        return out
 
 class EntrywayLocation(Location):
     name = "Entryway"
@@ -88,10 +128,20 @@ class EntrywayLocation(Location):
         "arched entrance": "AntechamberLocation"
     }
 
+    @staticmethod
+    async def exec_open(arguments: list) -> None:
+        await print_line("The door refuses to budge. You slam your body's full weight against it, and still nothing.")
+
     objects = [
         RoomObject(
             "Door",
-            description="The door looks old and decayed, but it won't budge.",
+            description="The door looks old and decayed, but doesn't seem to be going anywhere soon.",
+            commands=[
+                LocalCommand(
+                    [["open"]],
+                    exec_open
+                )
+            ],
         ),
         RoomObject(
             "Coatrack",
@@ -125,6 +175,7 @@ class EastHallLocation(Location):
         "ever-open doorway": "AntechamberLocation",
         "beckoningly ajar doorway": "BoudoirLocation",
         "swinging door": "KitchenLocation",
+        "grand doorway": "DiningHallLocation",
     }
 
     objects = [
@@ -167,7 +218,8 @@ class KitchenLocation(Location):
     floor = 0
 
     pathways = {
-        "swinging door": "EastHallLocation"
+        "swinging door": "EastHallLocation",
+        "discrete double doors": "DiningHallLocation",
     }
 
     objects = [
@@ -177,14 +229,64 @@ class KitchenLocation(Location):
         ),
     ]
 
+class DiningHallLocation(Location):
+    name = "Dining Hall"
+    description = "The dining hall is vast, with tall coved ceilings. You hear an echo as your shoes tap against the checkered marble floor."
+    floor = 0
+
+    pathways = {
+        "grand doorway": "EastHallLocation",
+        "discrete double doors": "KitchenLocation",
+        "sturdy wooden door": "MudRoomLocation",
+    }
+
+    objects = [
+        RoomObject(
+            "Chairs",
+            description="The chairs around the table are all pulled out. It infuriates you!",
+        ),
+        RoomObject(
+            "Yellowed Plate",
+            description="The dining table is set, but one plate is significantly more yellowed than the rest.",
+            # TODO: Hidden. Note
+            item_locations={
+                "under": [
+                    Sword(),
+                ]
+            }
+        ),
+    ]
+
+class MudRoomLocation(Location):
+    name = "Mud Room"
+    description = "Your attention is immediately drawn to the red yarn sprawling across the floor. You can barely make out the floor's original tiling. Unraveled piles grow feet tall."
+    floor = 0
+
+    pathways = {
+        "sturdy wooden door": "DiningHallLocation",
+    }
+
+    objects = [
+        RoomObject(
+            "Floor",
+            description="It's covered in red yarn!",
+            item_locations={
+                "atop": [
+                    # YARN
+                    Sword(),
+                ]
+            }
+        ),
+    ]
+
 
 # Hydrate first
-for location in [Location] + list(get_subclasses(Location)):
+for location in [Location] + get_subclasses(Location):
     for k, v in location.pathways.items():
         assert v in LocationMeta.locations, f"Invalid location classname '{v}'!"
         location.pathways[k] = LocationMeta.locations[v]
 
 # Check at runtime for one-way rooms (these aren't intentional at this point!)
-for location in [Location] + list(get_subclasses(Location)):
+for location in [Location] + get_subclasses(Location):
     for other_loc in location.pathways.values():
         assert location in other_loc.pathways.values(), f"One-way room: {other_loc.__name__} doesn't reference {location.__name__}!"

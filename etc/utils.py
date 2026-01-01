@@ -10,4 +10,4 @@ def get_subclasses(base_class: type) -> list[type]:
         for sub in cls.__subclasses__():
             if sub in out: continue
             new.append(sub)
-    return out
+    return list(out)

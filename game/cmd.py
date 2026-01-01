@@ -1,42 +1,39 @@
 import asyncio
 import pyray as rl
+from typing import Optional, Any
 
 from ui.text import RichTextChunk
 from game.io import print_line, prompt
 from etc.utils import get_subclasses
 from game.player import Player
+from game.cmd_base import Command
 
-class Command:
-    pattern = [[]]
-    description = ". . ."
+def db_lookup(kv: dict, query: str) -> Optional[Any]:
+    query = query.lower()
+    kv = {k.lower(): v for k, v in kv.items()}
 
-    def __init__(self) -> None:
-        raise NotImplementedError
+    if query in kv:
+        return kv[query]
 
-    @staticmethod
-    async def execute(arguments: list) -> None:
-        raise NotImplementedError
+    if not query:
+        return None
 
-    @classmethod
-    def to_str(cls) -> str:
-        # NOTE: Can't use __str__ here because there are no instances of
-        # commands. At least I don't THINK theres a way to do __str__ on
-        # classes... my WiFi is down. Maybe some abstractbaseclass stuff
-        out = []
+    # Try to squish it until it works. These have to be seperate loops bc
+    # they are prioritized
+    if query not in kv:
+        # First, check if *we* start with a location. Maybe a player typed
+        # the whole display string (???)
+        for k in kv:
+            if query.startswith(k):
+                return kv[k]
 
-        for option_set in cls.pattern:
-            clean = []
-            if not isinstance(option_set, list):
-                clean.append("str")
-            else:
-                for bit in option_set:
-                    # FUTURE: Add Location, Item, etc support
-                    assert isinstance(bit, str)
-                    clean.append(bit)
-            out.append("[%s]" % "/".join(clean))
+        # Otherwise, let's assume the player is using a shortcut. Maybe
+        # a location starts with *us*.
+        for k in kv:
+            if k.startswith(query):
+                return kv[k]
 
-        return " ".join(out)
-
+    return None
 
 class HelpCommand(Command):
     pattern = [["?", "help"]]
@@ -46,7 +43,13 @@ class HelpCommand(Command):
     async def execute(arguments: list) -> None:
         await print_line("-- Help --")
         for command in commands:
-            await print_line(f"{command.to_str()} - {command.description}")
+            if not command.pattern[0]:
+                continue
+            await print_line(f"{command} - {command.description}")
+
+        await print_line("<yellow>NOTE: Some commands are dependant on being near an object or location.</yellow>")
+        await print_line("<yellow>Those will not be shown here. <act>look</act> or <act>inspect</act> your surroundings to</yellow>")
+        await print_line("<yellow>see these actions.</yellow>")
 
 class ExitCommand(Command):
     pattern = [["quit", "exit", "bye"]]
@@ -73,35 +76,20 @@ class MoveCommand(Command):
 
         pathways = Player.player.location.pathways
         location_kv = {
-            **{k.lower(): v for k, v in pathways.items()},
-            **{v.name.lower(): v for v in pathways.values()},
+            **{k: v for k, v in pathways.items()},
+            **{v.name: v for v in pathways.values()},
         }
-        print(location_kv)
 
-        # Try to squish it until it works. These have to be seperate loops bc
-        # they are prioritized
-        if loc_query not in location_kv:
-            # First, check if *we* start with a location. Maybe a player typed
-            # the whole display string (???)
-            for k in location_kv:
-                if loc_query.startswith(k):
-                    loc_query = k
-                    break
-            else:
-                # Otherwise, let's assume the player is using a shortcut. Maybe
-                # a location starts with *us*.
-                for k in location_kv:
-                    if k.startswith(loc_query):
-                        loc_query = k
-                        break
+        maybe_location = db_lookup(location_kv, loc_query)
 
-        if loc_query in location_kv:
-            Player.player.location = location_kv[loc_query]
-            await print_line(f"You go to {Player.player.location.display_name}")
-        else:
+        if not maybe_location:
             await print_line(f"I don't know where '{loc_query}' is. Take a look around:")
             for route, location in pathways.items():
                 await print_line(f"- There is a <paleyellow>{route}</paleyellow> to {location.display_name} here.")
+            return
+
+        Player.player.location = maybe_location
+        await print_line(f"You go to {Player.player.location.display_name}")
 
 class LookCommand(Command):
     # Old habits die hard
@@ -111,6 +99,36 @@ class LookCommand(Command):
     @staticmethod
     async def execute(arguments: list) -> None:
         await Player.player.location.describe()
+
+class InspectCommand(Command):
+    pattern = [["inspect"], str]
+    description = "Inspect an object or item around the room."
+
+    @staticmethod
+    async def execute(arguments: list) -> None:
+        query = arguments[0].lower()
+
+        targets = {}
+        for obj in Player.player.location.objects:
+            targets[obj.name] = obj
+            for items in obj.item_locations.values():
+                for item in items:
+                    targets[item.name] = item
+
+        print(targets)
+        target = db_lookup(targets, query)
+
+        if not target:
+            await print_line(f"I don't know what '{query}' is. Take a look around:")
+            for obj in Player.player.location.objects:
+                await print_line(f"<gray>-</gray> There is {obj.article} {obj.display_name} here.")
+                for relation, items in obj.item_locations.items():
+                    for item in items:
+                        await print_line(f"    <gray>-</gray> {relation.title()} the {obj.display_name}, there is a {item.name}.")
+            return
+
+        await target.describe()
+
 
 commands = get_subclasses(Command)
 
@@ -141,7 +159,7 @@ async def run_command(command_line: str) -> None:
     command_line = command_line.lower()
 
     alias_to_command = {}
-    for command in commands:
+    for command in commands + Player.player.location.applicable_commands():
         for alias in command.pattern[0]:
             alias_to_command[alias] = command
 

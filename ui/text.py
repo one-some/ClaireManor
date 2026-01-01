@@ -60,7 +60,7 @@ class RichText:
             return cls.from_str(value)
         elif isinstance(value, RichTextChunk):
             return cls([value])
-        assert False
+        assert False, f"Won't cast from {type(value)}"
 
     @staticmethod
     def tag_to_style(tag: str) -> rl.Color:

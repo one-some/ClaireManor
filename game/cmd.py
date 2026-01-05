@@ -141,6 +141,26 @@ class InspectCommand(Command):
 
         await target.describe()
 
+# class TakeCommand(Command):
+#     pattern = [["grab", "get", "take", "collect"], str]
+#     description = "Collects an item in the room"
+# 
+#     @staticmethod
+#     async def execute(arguments: list) -> None:
+#         query = arguments[0].lower()
+# 
+#         # TODO
+# 
+#         kv = {
+#         }
+# 
+#         maybe = db_lookup(location_kv, loc_query)
+# 
+#         if not maybe:
+#             await print_line(f"I don't know what '{query}' is. Maybe <act>look</act> around?")
+#             return
+#         
+#         #TODO: PICKUP
 
 commands = get_subclasses(Command)
 

@@ -48,6 +48,7 @@ class Player:
 
     @staticmethod
     def load(path: str) -> Player:
+        # NOTE: This is the wimpy way out. In future make a to_json chain maybe
         with open(path, "rb") as file:
             return pickle.load(file)
 

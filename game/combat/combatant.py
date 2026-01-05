@@ -37,9 +37,16 @@ class Combatant:
 
         self.inventory = kwargs.pop("inventory")
 
+        self.status_effects = []
+
         if kwargs:
             print(kwargs)
             raise RuntimeError("kwargs not exausted")
+
+    def __setstate__(self, d: dict) -> None:
+        # Hook into pickle protocol to unscrew status effects
+        self.__dict__ = d
+        self.status_effects = []
 
     def __repr__(self) -> str:
         return str(self.__dict__)
@@ -47,11 +54,26 @@ class Combatant:
     @property
     def is_alive(self) -> bool:
         return bool(self.health)
+
+    def apply_effect(self, effect: type) -> None:
+        if any([e for e in self.status_effects if isinstance(e, effect)]):
+            print("no. we have it already!")
+            return
+        print("Applying effect", effect)
+        self.status_effects.append(effect())
+
+    async def do_effects(self) -> None:
+        for effect in self.status_effects:
+            for r in effect.turn_impositions:
+                r.impose(self)
+                await print_line(r.format(self))
     
     async def plan_attack(self, enemies: list[Combatant]) -> (Optional[BattleAction], Optional[Combatant]):
         raise NotImplementedError
 
     async def do_move(self, action: BattleAction, target: Combatant) -> None:
+        await self.do_effects()
+
         await action.execute(user=self, target=target)
         await asyncio.sleep(0.5)
 

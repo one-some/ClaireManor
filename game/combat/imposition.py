@@ -13,7 +13,7 @@ class BattleImposition:
         # Take whatever we promised we would
         raise NotImplementedError
 
-    def print(self, combatant: Combatant) -> None:
+    def format(self, combatant: Combatant) -> str:
         raise NotImplementedError
 
 class RangedStatBattleImposition(BattleImposition):
@@ -33,11 +33,11 @@ class RangedStatBattleImposition(BattleImposition):
     def impose(self, combatant: Combatant) -> None:
         self.get_stat(combatant).alter(-self.amount)
 
-    def format(self, combatant: Combatant) -> None:
+    def format(self, combatant: Combatant) -> str:
         stat = self.get_stat(combatant)
         amount_str = ("+" if self.amount <= 0 else "-") + str(self.amount)
         return language.format(
-            f"    [{combatant.lang.pretty_name}] " + self.format_pattern % f"{amount_str} ({stat.value}) {stat.name}",
+            f"[{combatant.lang.pretty_name}] " + self.format_pattern % f"{amount_str} ({stat.value}) {stat.name}",
             combatant=combatant.lang
         )
 

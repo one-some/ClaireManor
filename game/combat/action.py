@@ -11,6 +11,11 @@ from game.combat.imposition import (
     StaminaBattleImposition,
     HealthBattleImposition
 )
+from game.combat.effects import (
+    BleedingEffect,
+    ConcussedEffect,
+    WindedEffect
+)
 from game import language
 from game.language import PronounSet, LanguageProfile, MessagePool
 from game.io import print_line
@@ -19,7 +24,10 @@ class BattleAction:
     name = "Action"
     user_impositions = []
     target_impositions = []
+    target_effects = []
+
     fail_rate = 0.0
+    effect_chance = 0.4
 
     attempt_messages = MessagePool(["A try was made"])
     fail_messages = MessagePool(["...But it failed!"])
@@ -47,7 +55,7 @@ class BattleAction:
 
         for r in self.user_impositions:
             r.impose(user)
-            await print_line(r.format(user))
+            await print_line("    " + r.format(user))
 
         if random.random() < self.fail_rate:
             message = language.format(
@@ -62,6 +70,15 @@ class BattleAction:
         for r in self.target_impositions:
             r.impose(target)
             await print_line(r.format(target))
+
+        if random.random() < self.effect_chance and self.target_effects:
+            effect = random.choice(self.target_effects)
+            line = language.format(
+                "<yellow>{Target} {target.is} %s</yellow>" % effect.name,
+                target=target.lang,
+            )
+            await print_line(line)
+            target.apply_effect(effect)
 
 
 class SlashAction(BattleAction):
@@ -88,6 +105,8 @@ class StabAction(BattleAction):
     name = "Stab"
     user_impositions = [StaminaBattleImposition(15)]
     target_impositions = [HealthBattleImposition(20)]
+    target_statuses = [BleedingEffect]
+
     # TODO: BLEEDING
     fail_rate = 0.50
 
@@ -107,6 +126,7 @@ class PunchAction(BattleAction):
     user_impositions = [StaminaBattleImposition(17)]
     target_impositions = [HealthBattleImposition(5)]
     fail_rate = 0.20
+    target_effects = [WindedEffect]
 
     attempt_messages = MessagePool([
         "{User} {user.swings} at {Target}"
@@ -122,7 +142,7 @@ class BashAction(BattleAction):
     name = "Bash"
     user_impositions = [StaminaBattleImposition(15)]
     target_impositions = [HealthBattleImposition(10)]
-    # TODO: Concussed
+    target_effects = [ConcussedEffect]
 
     fail_rate = 0.20
 

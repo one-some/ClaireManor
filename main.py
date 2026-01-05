@@ -13,7 +13,6 @@ rl.set_window_state(rl.ConfigFlags.FLAG_WINDOW_RESIZABLE | rl.ConfigFlags.FLAG_W
 rl.init_window(800, 450, "The Manor Claire")
 rl.set_target_fps(60)
 
-
 from ui.vector2 import Vector2
 from ui.renderable import Renderable
 

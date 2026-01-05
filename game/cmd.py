@@ -12,6 +12,9 @@ def db_lookup(kv: dict, query: str) -> Optional[Any]:
     query = query.lower()
     kv = {k.lower(): v for k, v in kv.items()}
 
+    # Longest to shortest for substring priority
+    kv = dict(sorted(kv.items(), key=lambda x: x[0], reverse=True))
+
     if query in kv:
         return kv[query]
 
@@ -20,19 +23,27 @@ def db_lookup(kv: dict, query: str) -> Optional[Any]:
 
     # Try to squish it until it works. These have to be seperate loops bc
     # they are prioritized
-    if query not in kv:
-        # First, check if *we* start with a location. Maybe a player typed
-        # the whole display string (???)
-        for k in kv:
-            if query.startswith(k):
-                return kv[k]
 
-        # Otherwise, let's assume the player is using a shortcut. Maybe
-        # a location starts with *us*.
-        for k in kv:
-            if k.startswith(query):
-                return kv[k]
+    # First, check if *we* start with a location. Maybe a player typed
+    # the whole display string (???)
+    for k in kv:
+        if query.startswith(k):
+            return kv[k]
 
+    # Next, let's assume the player is using a shortcut. Maybe
+    # a location starts with *us*.
+    for k in kv:
+        if k.startswith(query):
+            return kv[k]
+
+    # Okay, maybe they're using a substring? Probs false positives, ensure we're
+    # already sorted.
+    print(kv, query)
+    for k in kv:
+        if query in k:
+            return kv[k]
+
+    # Idk
     return None
 
 class HelpCommand(Command):
@@ -90,6 +101,7 @@ class MoveCommand(Command):
 
         Player.player.location = maybe_location
         await print_line(f"You go to {Player.player.location.display_name}")
+        await Player.player.on_location_change()
 
 class LookCommand(Command):
     # Old habits die hard

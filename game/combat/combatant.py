@@ -5,8 +5,9 @@ import asyncio
 from typing import Optional
 from game.io import print_line, choice_prompt
 from game.items.item import Item, FakeItem
-from game.items.weapon import Weapon
+from game.items.weapon import Weapon, BoneClub
 from game.combat.action import BattleAction, PunchAction
+from game.language import LanguageProfile, PronounSet
 
 class RangedStat:
     def __init__(self, name: str, max_value: float, value: Optional[float] = None) -> None:
@@ -42,6 +43,10 @@ class Combatant:
 
     def __repr__(self) -> str:
         return str(self.__dict__)
+
+    @property
+    def is_alive(self) -> bool:
+        return bool(self.health)
     
     async def plan_attack(self, enemies: list[Combatant]) -> (Optional[BattleAction], Optional[Combatant]):
         raise NotImplementedError
@@ -49,6 +54,9 @@ class Combatant:
     async def do_move(self, action: BattleAction, target: Combatant) -> None:
         await action.execute(user=self, target=target)
         await asyncio.sleep(0.5)
+
+class LetMeOutException(Exception):
+    pass
 
 class PlayerCombatant(Combatant):
     base_actions = [
@@ -80,6 +88,7 @@ class PlayerCombatant(Combatant):
             **{weapon.list_formatted: weapon for weapon in self.inventory.weapons + [flesh_and_bone]},
             "<blue>Items</blue>": "ITEMS",
             "<gray>Skip Turn</gray>": "SKIP",
+            "<gray>Run Away</gray>": "RUN",
         }
 
         while True:
@@ -87,6 +96,23 @@ class PlayerCombatant(Combatant):
 
             if choice == "SKIP":
                 return None
+
+            if choice == "RUN":
+                # TODO: Make this chance dependent on speed
+                await print_line("<yellow>You make a daring attempt at escape...</yellow>")
+                await asyncio.sleep(1.0)
+                await print_line("<gray>...</gray>")
+                await asyncio.sleep(1.0)
+
+
+                if random.random() < 0.2:
+                    await print_line("<red>You can't get away!</red>")
+                    await asyncio.sleep(1.0)
+                    return None
+
+                await print_line("<yellow>Got away safely!</yellow>")
+                await asyncio.sleep(1.5)
+                raise LetMeOutException
 
             if isinstance(choice, Item):
                 action = await self.choose_item_action(choice)
@@ -136,7 +162,11 @@ class EnemyCombatant(Combatant):
         PunchAction()
     ]
 
+    item_pool = []
+
     def __init__(self, **kwargs) -> None:
+        # Mehhh
+        kwargs["inventory"].append(random.choice(self.item_pool))
         super().__init__(**kwargs)
 
     async def plan_attack(self, enemies: list[Combatant]) -> (Optional[BattleAction], Optional[Combatant]):
@@ -148,7 +178,23 @@ class EnemyCombatant(Combatant):
                 actions += item.get_eligible_actions(user=self, target=target)
 
         # TODO: Preference?
-        action = random.choice(actions)
-
+        action = random.choice(actions) if actions else None
         return action, target
 
+class EnemyAppearance:
+    def __init__(self, combatant: type, weight: float = 1.0) -> None:
+        self.combatant = combatant
+        self.weight = weight
+
+class SkeletonCombatant(EnemyCombatant):
+    base_actions = [
+        PunchAction()
+    ]
+
+    item_pool = [
+        BoneClub()
+    ]
+
+    def __init__(self, **kwargs) -> None:
+        kwargs["lang"] = LanguageProfile("Skeleton", PronounSet.IT, "<gray>%s</gray>")
+        super().__init__(**kwargs)

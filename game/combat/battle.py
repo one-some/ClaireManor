@@ -5,15 +5,20 @@ import asyncio
 from typing import Optional
 
 from game import io
-from game.io import print_line, choice_prompt
+from game.io import print_line, choice_prompt, wait_for_enter
 
 from game import ui
 from game import language
-from game.player import Player
 from game.language import PronounSet, LanguageProfile, MessagePool
 from game.items.inventory import Inventory
 from game.items.weapon import Sword
-from game.combat.combatant import Combatant, PlayerCombatant, EnemyCombatant
+from game.combat.combatant import (
+    Combatant,
+    PlayerCombatant,
+    EnemyCombatant,
+    EnemyAppearance,
+    LetMeOutException,
+)
 
 class Battle:
     join_messages = MessagePool([
@@ -26,6 +31,9 @@ class Battle:
         self.parties = parties
         # Infamous "two-party system"
         assert len(self.parties) == 2
+
+    def is_party_dead(self, party: list) -> None:
+        return all([not c.is_alive for c in party])
 
     async def do_turn(self) -> None:
         everyone = []
@@ -48,6 +56,17 @@ class Battle:
             if action and target:
                 await print_line("---")
                 await combatant.do_move(action, target)
+
+            # If a whole party is dead, stop the show
+            for party in self.parties:
+                if self.is_party_dead(party):
+                    print("Ded2")
+                    raise LetMeOutException
+
+        for party in self.parties:
+            if self.is_party_dead(party):
+                print("Ded1")
+                raise LetMeOutException
 
     async def update_parties(self, new_members: list[list[Combatant]]) -> None:
         # There's probably a way to not have to iterate over the parties in
@@ -85,12 +104,20 @@ class Battle:
                 guy=combatant.lang
             ))
 
-def conjure_enemies() -> list[EnemyCombatant]:
+def conjure_enemies(enemy_pool: list[EnemyAppearance]) -> list[EnemyCombatant]:
     out = []
 
-    for i in range(3):
-        out.append(EnemyCombatant(
-            lang=LanguageProfile("Skeleton", PronounSet.IT, "<gray>%s</gray>"),
+    # TODO: Scale with player level!!!
+    enemy_amount = random.randint(1, 3)
+
+    appearances = random.choices(
+        population=enemy_pool,
+        weights=[a.weight for a in enemy_pool],
+        k=enemy_amount
+    )
+
+    for appearance in appearances:
+        out.append(appearance.combatant(
             max_health=100,
             max_stamina=100,
             speed=random.randint(1, 30),
@@ -99,21 +126,35 @@ def conjure_enemies() -> list[EnemyCombatant]:
 
     return out
 
-async def battle_loop():
+async def battle_loop(player: Player, enemy_pool: list[EnemyAppearance]):
     ui.switch_active_text_container(ui.battle_text_container)
 
-    battle = Battle([[Player.player.combatant], []])
-
+    battle = Battle([[player.combatant], []])
     await print_line("=== It's time to battle! ===")
-    await battle.update_parties([[], conjure_enemies()])
+
+    await battle.update_parties([[], conjure_enemies(enemy_pool)])
+
+    # Not a fan of the death detection code....
+    player_party = battle.parties[0]
+    enemy_party = battle.parties[1]
 
     await asyncio.sleep(1.0)
 
     while True:
-        await battle.do_turn()
+        try:
+            await battle.do_turn()
+        except LetMeOutException:
+            break
 
         # DEBUG
         await asyncio.sleep(0.0)
 
-    await print_line("Bai")
     ui.switch_active_text_container(ui.story_text_container)
+    await print_line("The battle is over!")
+    await wait_for_enter()
+
+    if battle.is_party_dead(player_party):
+        await print_line("You die!")
+        await player.on_die()
+    elif battle.is_party_dead(enemy_party):
+        await print_line("You have vanquished your enemies!")

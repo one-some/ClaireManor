@@ -8,6 +8,9 @@ class Inventory:
     def __init__(self, items: list[Item]) -> None:
         self.items = items
 
+    def append(self, item: Item) -> None:
+        self.items.append(item)
+
     @property
     def weapons(self) -> list[Weapon]:
         return [item for item in self.items if isinstance(item, Weapon)]

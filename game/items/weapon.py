@@ -1,6 +1,6 @@
 from game.items.item import Item
 from etc.utils import get_subclasses
-from game.combat.action import StabAction, SlashAction
+from game.combat.action import StabAction, SlashAction, BashAction
 
 class Weapon(Item):
     base_name = "Unknown Weapon"
@@ -17,6 +17,19 @@ class Dagger(Weapon):
         SlashAction(),
         StabAction()
     ]
+
+class SilverDagger(Dagger):
+    base_name = "Silver Dagger"
+
+class Club(Weapon):
+    base_name = "Club"
+
+    static_actions = [
+        BashAction(),
+    ]
+
+class BoneClub(Club):
+    base_name = "Bone Club"
 
 class Sword(Weapon):
     base_name = "Sword"

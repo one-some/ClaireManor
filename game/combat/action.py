@@ -117,3 +117,22 @@ class PunchAction(BattleAction):
         "{User} can't seem to hit {Target}!",
         "{Target} {target.is} too fast for {User}!",
     ])
+
+class BashAction(BattleAction):
+    name = "Bash"
+    user_impositions = [StaminaBattleImposition(15)]
+    target_impositions = [HealthBattleImposition(10)]
+    # TODO: Concussed
+
+    fail_rate = 0.20
+
+    attempt_messages = MessagePool([
+        "{User} {user.bashes} at {Target}",
+        "{User} {user.swings} at {Target}",
+    ])
+
+    fail_messages = MessagePool([
+        "{User} {user.misses} {Target}!",
+        "{User} can't seem to hit {Target}!",
+        "{Target} {target.is} too fast for {User}!",
+    ])

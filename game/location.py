@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Optional
 
 from etc.utils import get_subclasses
@@ -8,8 +9,7 @@ from game.io import print_line
 from game.items.item import Item
 from game.items.weapon import Sword
 from game.cmd_base import LocalCommand
-
-# Should be in cmd.py but circular imports and time limits..etc
+from game.combat.combatant import EnemyAppearance, SkeletonCombatant
 
 class RoomObject:
     def __init__(
@@ -87,6 +87,8 @@ class Location(metaclass=LocationMeta):
     commands = []
     objects = []
 
+    enemy_pool = []
+
     @staticmethod
     def lookup(name: str) -> Location:
         return LocationMeta.locations[name]
@@ -156,7 +158,7 @@ class EntrywayLocation(Location):
 
 class AntechamberLocation(Location):
     name = "Antechamber"
-    description = "The heart of the house; all other rooms seem to branch out from here. The room itself is oddly sparse, and smells strongly of peat moss. Cobwebs gently adorn the chandelier."
+    description = "The heart of the house; all other rooms seem to branch out from here. The room itself is oddly sparse, and smells strongly of peat moss. Cobwebs gently adorn the chandelier, which hovers above a weird clump of carpet. You could rest here."
     floor = 0
 
     pathways = {
@@ -164,7 +166,38 @@ class AntechamberLocation(Location):
         "ever-open doorway": "EastHallLocation",
     }
 
-    objects = []
+    @staticmethod
+    async def exec_rest(arguments: list) -> None:
+        # I have done a lot of bad things in my life, but also some good. Please ignore the next
+        # line if you have a heart.
+        from game.player import Player
+
+        await print_line("You clumsily lower your body onto the pile of carpet. It chafes against your skin, but after a while, exhaustion overtakes you.")
+        Player.player.save()
+        await asyncio.sleep(1.0)
+        await print_line("...")
+        await asyncio.sleep(1.0)
+        await print_line("You awaken after some time. You aren't sure how much time has passed, but you feel well rested.")
+        await asyncio.sleep(1.0)
+        await print_line("<yellow>You saved the game!</yellow>")
+
+    objects = [
+        RoomObject(
+            "Makeshift Bed",
+            description="There is an old roll of carpet here. It's unclear why, but it could function as a bed in a pinch. [<yellow>Save Location</yellow>]",
+            commands=[
+                LocalCommand(
+                    [["rest", "sleep", "save"]],
+                    exec_rest
+                )
+            ],
+        )
+    ]
+
+    enemy_pool = [
+        EnemyAppearance(SkeletonCombatant)
+    ]
+
 
 class EastHallLocation(Location):
     name = "East Hall"

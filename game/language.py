@@ -228,7 +228,7 @@ def indefinite_article(noun_phrase: str) -> str:
     # https://github.com/ibid/ibid/blob/master/ibid/utils/__init__.py
 
     # algorithm adapted from CPAN package Lingua-EN-Inflect-1.891 by Damian Conway
-    m = re.search("\w+", noun_phrase)
+    m = re.search(r"\w+", noun_phrase)
     if m:
         word = m.group(0)
     else:

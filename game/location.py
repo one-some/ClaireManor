@@ -65,7 +65,7 @@ class LocationMeta(type):
 
     @property
     def display_name(self) -> str:
-        return f"[<yellow>{self.name} ({self.floor}F)</yellow>]"
+        return f"<yellow>{self.name} ({self.floor}F)</yellow>"
 
     @property
     def article(self) -> str:
@@ -77,6 +77,12 @@ class LocationMeta(type):
             return f"<palegreen>{self.description}</palegreen>"
         return "<gray>It's unremarkable.</gray>"
 
+    @property
+    def enemy_pool(self) -> list[EnemyAppearance]:
+        return self.additional_enemies + [
+            EnemyAppearance(SkeletonCombatant)
+        ]
+
 class Location(metaclass=LocationMeta):
     name = ". . ."
     description = None
@@ -87,7 +93,7 @@ class Location(metaclass=LocationMeta):
     commands = []
     objects = []
 
-    enemy_pool = []
+    additional_enemies = []
 
     @staticmethod
     def lookup(name: str) -> Location:
@@ -95,7 +101,7 @@ class Location(metaclass=LocationMeta):
 
     @classmethod
     async def describe(cls) -> None:
-        await print_line(cls.display_name)
+        await print_line(f"You look around the {cls.display_name}.")
         await print_line(cls.display_description)
 
         if cls.objects:
@@ -194,15 +200,21 @@ class AntechamberLocation(Location):
         )
     ]
 
-    enemy_pool = [
-        EnemyAppearance(SkeletonCombatant)
-    ]
-
 
 class EastHallLocation(Location):
     name = "East Hall"
     description = "The long eastern hallway has striped wallpaper, making the hall appear taller than it actually is. As of recently, though, the wallpaper is peeling due to water damage. A lonely vase sits on the table at the end of the hall."
     floor = 0
+
+    @staticmethod
+    async def exec_fish_vase(arguments: list) -> None:
+        await print_line("You plunge your hand into the cold water of the vase and begin to fish around.")
+        await asyncio.sleep(1.0)
+        await print_line("...")
+        await asyncio.sleep(1.0)
+        await print_line("<red>You feel something cold and hard. You pull out a human finger.</red>")
+        await asyncio.sleep(1.0)
+        await print_line("You return it. Perhaps it was sleeping.")
 
     pathways = {
         "ever-open doorway": "AntechamberLocation",
@@ -215,6 +227,12 @@ class EastHallLocation(Location):
         RoomObject(
             "Vase",
             description="Whatever flowers were once in this vase have long disintigrated, but somehow the water remains. <yellow>You see something in the bottom of the water.</yellow>",
+            commands=[
+                LocalCommand(
+                    [["fish"]],
+                    exec_fish_vase
+                )
+            ],
         ),
     ]
 

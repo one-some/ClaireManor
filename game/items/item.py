@@ -5,6 +5,7 @@ if typing.TYPE_CHECKING:
 
 class Item:
     base_name = "Unknown Item"
+    description = ""
     format_pattern = "<blue>%s</blue>"
     static_actions = []
 

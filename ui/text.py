@@ -146,25 +146,39 @@ class TextRenderable(Renderable):
         self.inserted_break_indices.clear()
         last_space_index = -1
         line_width = 0.0
+        current_word_width = 0.0
+        scale_factor = self.font_size / self.font.baseSize
+
+        # Spudge it to make it seem more friendly
+        max_line_width = allocated_size.x - 24.0
 
         for i, char in enumerate(self.text.get_raw()):
             glyph_index = rl.get_glyph_index(self.font, ord(char))
-            line_width += self.font.glyphs[glyph_index].advanceX
+            char_width = self.font.glyphs[glyph_index].advanceX * scale_factor
+
+            if char == "\n":
+                line_width = 0.0
+                current_word_width = 0.0
+                last_space_index = -1
+                continue
+
+            line_width += char_width
+            current_word_width += char_width
 
             if char == " ":
                 last_space_index = i
-            elif char == "\n":
-                line_width = 0.0
-                last_space_index = -1
+                current_word_width = 0.0
 
-            if line_width > allocated_size.x:
-                if last_space_index == -1:
+            if line_width > max_line_width:
+                if last_space_index != -1:
+                    self.inserted_break_indices.append(last_space_index)
+                    line_width = current_word_width
+                else:
                     # break on letter if needed
                     self.inserted_break_indices.append(i)
-                else:
-                    self.inserted_break_indices.append(last_space_index)
+                    line_width = 0.0
+                    current_word_width = 0.0
                 last_space_index = -1
-                line_width = 0.0
 
     def get_wrapped_chunk_text(self) -> dict:
         # TODO: Cache per frame/inserted_break_indices

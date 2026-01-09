@@ -4,9 +4,10 @@ from typing import Optional, Any
 
 from ui.text import RichTextChunk
 from game.io import print_line, prompt
-from etc.utils import get_subclasses
+from game.items.item import Item
 from game.player import Player
 from game.cmd_base import Command
+from etc.utils import get_subclasses
 
 def db_lookup(kv: dict, query: str) -> Optional[Any]:
     query = query.lower()
@@ -99,25 +100,18 @@ class MoveCommand(Command):
                 await print_line(f"- There is a <paleyellow>{route}</paleyellow> to {location.display_name} here.")
             return
 
-        Player.player.location = maybe_location
-        await print_line(f"You go to {Player.player.location.display_name}")
-        await Player.player.on_location_change()
-
-class LookCommand(Command):
-    # Old habits die hard
-    pattern = [["look", "ls"]]
-    description = "Describes the room around you."
-
-    @staticmethod
-    async def execute(arguments: list) -> None:
-        await Player.player.location.describe()
+        await print_line(f"You're on your way.")
+        await Player.player.set_location(maybe_location)
 
 class InspectCommand(Command):
-    pattern = [["inspect"], str]
-    description = "Inspect an object or item around the room."
+    pattern = [["look", "ls", "inspect"], str]
+    description = "Inspects something. Inspect nothing to see the room around you, or an item/object"
 
     @staticmethod
     async def execute(arguments: list) -> None:
+        if not arguments[0]:
+            await Player.player.location.describe()
+            return
         query = arguments[0].lower()
 
         targets = {}
@@ -137,6 +131,12 @@ class InspectCommand(Command):
                 for relation, items in obj.item_locations.items():
                     for item in items:
                         await print_line(f"    <gray>-</gray> {relation.title()} the {obj.display_name}, there is a {item.name}.")
+            return
+        
+        if isinstance(target, Item):
+            await print_line(f"You look at the {target.name}.")
+            desc = target.description or "There isn't much to see here."
+            await print_line(desc)
             return
 
         await target.describe()

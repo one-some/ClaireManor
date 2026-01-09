@@ -1,10 +1,9 @@
 # The Manor Claire
-CSC 1313 Homework
-
-[Check it out on GitHub](https://github.com/one-some/ClaireManor)
+CSC 1313 Homework. [Check it out on GitHub!](https://github.com/one-some/ClaireManor)
 
 ## Usage
 You will need the `raylib` package:
+
 `pip install -r requirements.txt`
 
 ## Features
@@ -13,4 +12,3 @@ You will need the `raylib` package:
 - HiDPI Support
 - Dumb battle AI
 - Cool async architecture
-- 

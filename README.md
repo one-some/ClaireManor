@@ -1,5 +1,6 @@
 # The Manor Claire
 CSC 1313 Homework
+
 [Check it out on GitHub](https://github.com/one-some/ClaireManor)
 
 ## Usage

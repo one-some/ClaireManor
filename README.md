@@ -1,5 +1,10 @@
 # The Manor Claire
-CSC 1313 Homework
+CSC 1313 Homework. [Check it out on GitHub!](https://github.com/one-some/ClaireManor)
+
+## Usage
+You will need the `raylib` package:
+
+`pip install -r requirements.txt`
 
 ## Features
 - Basic layout engine
@@ -7,7 +12,3 @@ CSC 1313 Homework
 - HiDPI Support
 - Dumb battle AI
 - Cool async architecture
-
-# TODO:
-- Masks (Tragedy / Comedy)
-- DPI padding/image scaling (ITS GONNA BE HUGE ON 96 DPI RN)

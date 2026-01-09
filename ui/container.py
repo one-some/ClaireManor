@@ -38,7 +38,8 @@ class VStackContainer(Container):
     def reflow_layout(self, allocated_size: Vector2) -> None:
         self._cached_reflow_size = allocated_size
 
-        wiggle_room = allocated_size.y - (self.gap * (len(self.active_children) - 1))
+        content_size = allocated_size - self.padding
+        wiggle_room = content_size.y - (self.gap * (len(self.active_children) - 1))
         dynamic_children = len(self.active_children)
 
         for child in self.active_children:
@@ -46,14 +47,14 @@ class VStackContainer(Container):
                 continue
 
             wiggle_room -= child.static_size.y
-            child.reflow_layout(Vector2(allocated_size.x, child.static_size.y))
+            child.reflow_layout(Vector2(content_size.x, child.static_size.y))
             dynamic_children -= 1
 
         for child in self.active_children:
             if child.static_size:
                 continue
             child.reflow_layout(Vector2(
-                allocated_size.x,
+                content_size.x,
                 wiggle_room / dynamic_children
             ))
 
@@ -70,7 +71,7 @@ class VStackContainer(Container):
         iterator = self.active_children
 
         if self.v_align == VAlign.BOTTOM:
-            pos_y = allocated_size.y
+            pos_y = content_size.y
             iterator = reversed(iterator)
 
         for child in iterator:
@@ -89,7 +90,8 @@ class HStackContainer(Container):
     def reflow_layout(self, allocated_size: Vector2) -> None:
         self._cached_reflow_size = allocated_size
 
-        wiggle_room = allocated_size.x - (self.gap * (len(self.active_children) - 1))
+        content_size = allocated_size - self.padding
+        wiggle_room = content_size.x - (self.gap * (len(self.active_children) - 1))
         dynamic_children = len(self.active_children)
 
         for child in self.active_children:
@@ -97,7 +99,7 @@ class HStackContainer(Container):
                 continue
 
             wiggle_room -= child.static_size.x
-            child.reflow_layout(Vector2(allocated_size.x, child.static_size.y))
+            child.reflow_layout(Vector2(content_size.x, child.static_size.y))
             dynamic_children -= 1
 
         for child in self.active_children:
@@ -105,7 +107,7 @@ class HStackContainer(Container):
                 continue
             child.reflow_layout(Vector2(
                 wiggle_room / dynamic_children,
-                allocated_size.y,
+                content_size.y,
             ))
 
         max_height = 0
@@ -121,7 +123,7 @@ class HStackContainer(Container):
         iterator = self.active_children
 
         if self.h_align == HAlign.RIGHT:
-            pos_x = allocated_size.x
+            pos_x = content_size.x
             iterator = reversed(iterator)
 
         for child in iterator:

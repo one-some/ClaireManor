@@ -5,6 +5,7 @@ import pickle
 import asyncio
 from pathlib import Path
 
+from game import ui
 from game.combat import battle
 from game.items.inventory import Inventory
 from game.items.weapon import SilverDagger
@@ -56,18 +57,24 @@ class Player:
         with open(SAVE_PATH, "wb") as file:
             return pickle.dump(self, file)
 
-    async def on_location_change(self) -> None:
+    async def set_location(self, location: Location) -> None:
+        # Setters can't be async
+        self.location = location
+
+        ui.change_background(location.name.lower().replace(" ", "_"))
+        await location.describe()
+
         self.danger += random.random() * 0.5
 
         if self.danger > 0.7:
             line = self.watched_msg.sample()
             await print_line(f"<darkred>{line}</darkred>")
 
-        if self.danger >= 1.0 and self.location.enemy_pool:
+        if self.danger >= 1.0 and location.enemy_pool:
             self.danger = 0.0
             await print_line(f"<red>Enemies jump out from the shadows!</red>")
             await wait_for_enter()
-            await battle.battle_loop(self, self.location.enemy_pool)
+            await battle.battle_loop(self, location.enemy_pool)
 
         # self.save()
 

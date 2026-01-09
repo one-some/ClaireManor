@@ -63,7 +63,7 @@ async def render_and_process():
 async def linear():
     # await battle.battle_loop()
     # await story.play_cutscene("intro")
-    await Player.player.location.describe()
+    await Player.player.set_location(Player.player.location)
 
     while True:
         command_line = await prompt("[cmd]")

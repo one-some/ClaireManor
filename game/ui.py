@@ -1,6 +1,8 @@
 import time
 import asyncio
 import pyray as rl
+from pathlib import Path
+from typing import Optional
 
 from ui.vector2 import Vector2
 from ui.renderable import Renderable, EmptyRenderable, OverlayRenderable
@@ -64,18 +66,29 @@ class Fade:
         overlay_rect.color = (0x0, 0x0, 0x0, int(0xFF * alpha))
 
 
-def ui_process():
+def ui_process() -> None:
     Fade.step_active()
 
-def switch_active_text_container(cont: Renderable):
+def switch_active_text_container(cont: Renderable) -> None:
     global active_text_container
 
     active_text_container.active = False
     active_text_container = cont
     active_text_container.active = True
 
+def change_background(background: str) -> None:
+    # TODO: Unload textures so we dont have a like 3 byte memory leak
+
+    bg_path = Path("static/bg") / f"{background}.jpg"
+
+    if not bg_path.is_file():
+        bg_img.loaded = False
+        return
+
+    bg_img.load(str(bg_path))
+
 ui_root = EmptyRenderable()
-bg_img = ImageRenderable("static/bg/village_square.png", is_bg_image=True, parent=ui_root)
+bg_img = ImageRenderable(is_bg_image=True, parent=ui_root)
 
 big_container = VStackContainer(
     parent=ui_root,

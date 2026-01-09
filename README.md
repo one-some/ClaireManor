@@ -1,5 +1,6 @@
 # The Manor Claire
 CSC 1313 Homework
+[Check it out on GitHub](https://github.com/one-some/ClaireManor)
 
 ## Usage
 You will need the `raylib` package:
@@ -11,7 +12,4 @@ You will need the `raylib` package:
 - HiDPI Support
 - Dumb battle AI
 - Cool async architecture
-
-# TODO:
-- Masks (Tragedy / Comedy)
-- DPI padding/image scaling (ITS GONNA BE HUGE ON 96 DPI RN)
+- 

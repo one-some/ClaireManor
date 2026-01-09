@@ -5,6 +5,7 @@ import pickle
 import asyncio
 from pathlib import Path
 
+from game import fs
 from game import ui
 from game.combat import battle
 from game.items.inventory import Inventory
@@ -14,13 +15,9 @@ from game.combat.combatant import PlayerCombatant
 from game.location import EntrywayLocation
 from game.language import LanguageProfile, PronounSet, MessagePool
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
-SAVE_DIR = ROOT_DIR / "saves"
-SAVE_DIR.mkdir(parents=True, exist_ok=True)
-
-SAVE_PATH = SAVE_DIR / "plr001.save"
-
 class Player:
+    SAVE_PATH = fs.SAVE_DIR / "plr001.save"
+
     player: Player
     watched_msg = MessagePool([
         "Your hair stands up on end...",
@@ -54,7 +51,7 @@ class Player:
             return pickle.load(file)
 
     def save(self) -> None:
-        with open(SAVE_PATH, "wb") as file:
+        with open(self.SAVE_PATH, "wb") as file:
             return pickle.dump(self, file)
 
     async def set_location(self, location: Location) -> None:
@@ -64,7 +61,7 @@ class Player:
         ui.change_background(location.name.lower().replace(" ", "_"))
         await location.describe()
 
-        self.danger += random.random() * 0.5
+        self.danger += random.random() * 0.2
 
         if self.danger > 0.7:
             line = self.watched_msg.sample()
@@ -83,11 +80,5 @@ class Player:
         await wait_for_enter()
 
         clear_lines()
-        self.load(SAVE_PATH)
+        self.load(self.SAVE_PATH)
         await self.location.describe()
-
-if SAVE_PATH.is_file():
-    Player.player = Player.load(SAVE_PATH)
-else:
-    Player.player = Player()
-    Player.player.save()

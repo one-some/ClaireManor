@@ -111,13 +111,14 @@ class HStackContainer(Container):
             ))
 
         max_height = 0
+        children_width = 0
         for child in self.active_children:
             child_size = child.measure()
+            children_width += child_size.x
+
             if child_size.y > max_height:
                 max_height = child_size.y
         self._cached_reflow_size = Vector2(allocated_size.x, max_height)
-
-        assert self.h_align != HAlign.CENTER
 
         pos_x = 0
         iterator = self.active_children
@@ -125,6 +126,8 @@ class HStackContainer(Container):
         if self.h_align == HAlign.RIGHT:
             pos_x = content_size.x
             iterator = reversed(iterator)
+        elif self.h_align == HAlign.CENTER:
+            pos_x = (content_size.x - children_width) / 2
 
         for child in iterator:
             child_size = child.measure()

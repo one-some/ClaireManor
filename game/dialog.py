@@ -41,13 +41,14 @@ async def rich_drip_feed(
         if current_len < total_len:
             await asyncio.sleep(0.0)
 
-async def print_dialog(line: RichTextChunk | RichText | str) -> None:
+async def print_dialog(line: RichTextChunk | RichText | str, wait: bool = True) -> None:
     text_renderable = TextRenderable("", parent=ui.active_text_container)
 
     async for rich in rich_drip_feed(line):
         text_renderable.text = rich
 
-    await wait_for_enter()
+    if wait:
+        await wait_for_enter()
 
 async def add_dialog(name: str, text: str) -> None:
     container = HStackContainer(padding=Vector2(20, 20), gap=10, parent=ui.active_text_container)

@@ -23,12 +23,17 @@ class ImageRenderable(Renderable):
 
     def load(self, path: str) -> None:
         assert path
+
+        if self.loaded:
+            self.loaded = False
+            rl.unload_texture(self.texture)
+
         image = rl.load_image(path)
 
         if self.is_bg_image:
             factor = rl.get_render_width() // image.width
             rl.image_resize(image, image.width * factor, image.height * factor)
-            rl.image_blur_gaussian(image, 10)
+            rl.image_blur_gaussian(image, 4)
 
         self.texture = rl.load_texture_from_image(image)
         rl.unload_image(image)
@@ -50,11 +55,14 @@ class ImageRenderable(Renderable):
                 allocated_size.y / self.texture.height,
             )
 
-    def render(self, position) -> None:
+            self.position.x = -allocated_size.x / 2
+
+    def render_self(self, position) -> None:
         if not self.loaded:
             return
 
-        tint = rl.Color(0x44, 0x44, 0x44, 0xFF) if self.is_bg_image else rl.WHITE
+        alpha = 0x66
+        tint = rl.Color(alpha, alpha, alpha, 0xFF) if self.is_bg_image else rl.WHITE
 
         rl.draw_texture_ex(
             self.texture,

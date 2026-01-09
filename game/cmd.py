@@ -2,6 +2,8 @@ import asyncio
 import pyray as rl
 from typing import Optional, Any
 
+from game import sfx
+from game.ui import Fade
 from ui.text import RichTextChunk
 from game.io import print_line, prompt
 from game.items.item import Item
@@ -100,8 +102,14 @@ class MoveCommand(Command):
                 await print_line(f"- There is a <paleyellow>{route}</paleyellow> to {location.display_name} here.")
             return
 
+        await Fade(1.0, speed=0.1).wait_for()
+        await asyncio.gather(
+            sfx.await_sound("walk_wood", stop_at=1.3),
+            Player.player.set_location(maybe_location)
+        )
+        await Fade(0.0, speed=0.1).wait_for()
+
         await print_line(f"You're on your way.")
-        await Player.player.set_location(maybe_location)
 
 class InspectCommand(Command):
     pattern = [["look", "ls", "inspect"], str]
@@ -121,7 +129,6 @@ class InspectCommand(Command):
                 for item in items:
                     targets[item.name] = item
 
-        print(targets)
         target = db_lookup(targets, query)
 
         if not target:

@@ -61,7 +61,4 @@ async def cutscene_intro() -> None:
     await print_dialog("You cross the threshold into the Manor Claire.")
 
     await Fade(1.0).wait_for()
-    clear_lines()
-    await asyncio.sleep(1.0)
-    await Fade(0.0).wait_for()
 

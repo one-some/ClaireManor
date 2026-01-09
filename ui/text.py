@@ -72,6 +72,7 @@ class RichText:
             "act": rl.ORANGE,
             "noun": rl.WHITE,
             "red": rl.RED,
+            "white": rl.WHITE,
             "gray": rl.DARKGRAY,
             "green": rl.GREEN,
             "gold": rl.GOLD,

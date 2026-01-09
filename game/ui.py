@@ -31,9 +31,6 @@ class Fade:
         Fade.active_fade = self
         await self.future
 
-        # Muahahaha
-        await asyncio.sleep(1.0)
-
     def step(self) -> None:
         alpha = overlay_rect.color[3] / 0xFF
 
@@ -77,8 +74,6 @@ def switch_active_text_container(cont: Renderable) -> None:
     active_text_container.active = True
 
 def change_background(background: str) -> None:
-    # TODO: Unload textures so we dont have a like 3 byte memory leak
-
     bg_path = Path("static/bg") / f"{background}.jpg"
 
     if not bg_path.is_file():

@@ -62,7 +62,6 @@ class Player:
         self.location = location
 
         ui.change_background(location.name.lower().replace(" ", "_"))
-        # await print_line(f"You go to {location.display_name}")
         await location.describe()
 
         self.danger += random.random() * 0.5

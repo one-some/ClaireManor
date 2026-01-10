@@ -21,6 +21,7 @@ from ui.image import ImageRenderable
 
 from etc import font
 from game import ui
+from game import sfx
 from game import story
 from game.io import prompt, choice_prompt, print_line, clear_lines
 from game.cmd import run_command
@@ -47,6 +48,7 @@ async def render_and_process() -> None:
             rl.toggle_borderless_windowed()
 
         ui.ui_process()
+        sfx.music_loop_tick()
 
         ui.ui_root.reflow_layout(Vector2(
             rl.get_render_width(),

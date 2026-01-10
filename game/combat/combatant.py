@@ -188,7 +188,8 @@ class EnemyCombatant(Combatant):
 
     def __init__(self, **kwargs) -> None:
         # Mehhh
-        kwargs["inventory"].append(random.choice(self.item_pool))
+        if self.item_pool:
+            kwargs["inventory"].append(random.choice(self.item_pool))
         super().__init__(**kwargs)
 
     async def plan_attack(self, enemies: list[Combatant]) -> (Optional[BattleAction], Optional[Combatant]):

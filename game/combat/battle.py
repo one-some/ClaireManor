@@ -8,6 +8,7 @@ from game import io
 from game.io import print_line, choice_prompt, wait_for_enter
 
 from game import ui
+from game import sfx
 from game import language
 from game.language import PronounSet, LanguageProfile, MessagePool
 from game.items.inventory import Inventory
@@ -127,6 +128,8 @@ def conjure_enemies(enemy_pool: list[EnemyAppearance]) -> list[EnemyCombatant]:
     return out
 
 async def battle_loop(player: Player, enemy_pool: list[EnemyAppearance]):
+    sfx.play_music("battle")
+
     ui.switch_active_text_container(ui.battle_text_container)
 
     battle = Battle([[player.combatant], []])
@@ -151,6 +154,7 @@ async def battle_loop(player: Player, enemy_pool: list[EnemyAppearance]):
 
     ui.switch_active_text_container(ui.story_text_container)
     await print_line("The battle is over!")
+    sfx.stop_music("battle")
     await wait_for_enter()
 
     if battle.is_party_dead(player_party):

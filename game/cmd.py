@@ -179,6 +179,8 @@ class TakeCommand(Command):
                     pass
         Player.player.inventory.append(item)
 
+        sfx.play_sound("item")
+
         await print_line(f"<yellow>You got {item.name}!</yellow>")
         await print_line(item.formatted_description)
 

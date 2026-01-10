@@ -6,6 +6,7 @@ from game.ui import (
     ui_process,
     Fade
 )
+from game import sfx
 from game.io import print_line, prompt, clear_lines
 from game.dialog import add_dialog, print_dialog
 
@@ -23,6 +24,7 @@ async def play_cutscene(name: str) -> None:
 
 async def cutscene_intro() -> None:
     Fade.set_overlay_alpha(1.0)
+    sfx.play_sound("intro")
     await Fade(0.0).wait_for()
 
     await print_dialog(". . .")
@@ -60,5 +62,5 @@ async def cutscene_intro() -> None:
     await print_dialog(" ")
     await print_dialog("You cross the threshold into the Manor Claire.")
 
-    await Fade(1.0).wait_for()
+    await Fade(1.0, speed=0.05).wait_for()
 

@@ -275,9 +275,9 @@ class InputRenderable(Renderable):
 
         return 
 
-    def get_used_text(self) -> str:
+    def get_visual_text(self) -> str:
         if self.buffer:
-            return self.buffer
+            return self.buffer + "█"
 
         if self.prompt_str:
             return self.prompt_str
@@ -287,7 +287,7 @@ class InputRenderable(Renderable):
     def measure(self) -> Vector2:
         return Vector2.from_raylib(rl.measure_text_ex(
             self.font,
-            self.get_used_text(),
+            self.get_visual_text(),
             self.font_size,
             0,
         ))
@@ -345,7 +345,7 @@ class InputRenderable(Renderable):
         # Let's maybe not do tooo much logic in render. but whatever
         self.process()
 
-        chunk = RichTextChunk(self.get_used_text())
+        chunk = RichTextChunk(self.get_visual_text())
 
         if not self.buffer:
             chunk.color = rl.GRAY

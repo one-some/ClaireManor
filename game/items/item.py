@@ -8,11 +8,18 @@ class Item:
     description = ""
     format_pattern = "<blue>%s</blue>"
     static_actions = []
+    details = ""
 
     @property
     def name(self) -> str:
         # TODO: Attributes
         return self.format_pattern % self.base_name
+
+    @property
+    def formatted_description(self) -> str:
+        if not self.details:
+            return self.description
+        return "\n".join([self.description, "<gray>---</gray>", self.details])
 
     @property
     def list_formatted(self) -> str:

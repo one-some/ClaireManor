@@ -9,16 +9,17 @@ from ui.container import VAlign, VStackContainer, HStackContainer, Container
 prompt = ui.input_box.prompt
 wait_for_enter = ui.input_box.wait_for_enter
 
-async def print_line(line: RichTextChunk | RichText | str) -> None:
-    # I had to get myself to calm down with this one. This function is used like
-    # everywhere so in my mind I was like "this is async creep on CRAZY MODE
-    # STEROIDS" but it functions exactly how I like it with the small side
-    # effect of things in this async game engine actually being async (shocker)
+async def print_line(line: RichTextChunk | RichText | str, now: bool = False) -> None:
+    # HACK: I made the last-minute decision to run print_dialog for most prints. It's ugly!
+    if not now:
+        from game.dialog import print_dialog
+        await print_dialog(line, wait=False, chars_per_second=100)
+        return
 
     TextRenderable(line, parent=ui.active_text_container)
 
     # "Thinking" effect
-    await asyncio.sleep(0.0025)
+    await asyncio.sleep(0.05)
 
 def clear_lines() -> None:
     ui.active_text_container.clear_children()

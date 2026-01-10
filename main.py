@@ -21,6 +21,7 @@ from ui.image import ImageRenderable
 
 from etc import font
 from game import ui
+from game import story
 from game.io import prompt, choice_prompt, print_line, clear_lines
 from game.cmd import run_command
 from game.combat import battle
@@ -66,6 +67,9 @@ async def render_and_process() -> None:
     sys.exit(0)
 
 async def main_menu() -> None:
+    if "--continue" in sys.argv:
+        return "CONTINUE"
+
     Fade.set_overlay_alpha(1.0)
     center_cont = HStackContainer(
         h_align=HAlign.CENTER,
@@ -122,10 +126,10 @@ async def linear() -> None:
     elif menu_choice == "CONTINUE":
         Player.player = Player.load(Player.SAVE_PATH)
 
-    # await battle.battle_loop()
-    await Player.player.set_location(Player.player.location)
-
+    clear_lines()
     await Fade(0.0, speed=0.02).wait_for()
+    await Player.player.set_location(Player.player.location)
+    await Player.player.location.describe()
 
     while True:
         command_line = await prompt("[cmd]")

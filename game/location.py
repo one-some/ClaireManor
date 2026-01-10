@@ -7,9 +7,10 @@ from etc.utils import get_subclasses
 from game import language
 from game.io import print_line
 from game.items.item import Item
+from game.items.items import LeatherCoat, TragedyMask, ComedyMask, DarcyNote, EvilYarn
 from game.items.weapon import Sword
 from game.cmd_base import LocalCommand
-from game.combat.combatant import EnemyAppearance, SkeletonCombatant
+from game.combat.combatant import EnemyAppearance, SkeletonCombatant, RatCombatant
 
 class RoomObject:
     def __init__(
@@ -80,7 +81,8 @@ class LocationMeta(type):
     @property
     def enemy_pool(self) -> list[EnemyAppearance]:
         return self.additional_enemies + [
-            EnemyAppearance(SkeletonCombatant)
+            EnemyAppearance(SkeletonCombatant),
+            EnemyAppearance(RatCombatant),
         ]
 
 class Location(metaclass=LocationMeta):
@@ -104,6 +106,12 @@ class Location(metaclass=LocationMeta):
         await print_line(f"You look around the {cls.display_name}.")
         await print_line(cls.display_description)
 
+        if cls.pathways:
+            await print_line(f"<gray>You can move from here:</gray>")
+        for route, location in cls.pathways.items():
+            article = language.indefinite_article(route)
+            await print_line(f"- There is {article} <paleyellow>{route}</paleyellow> to {location.display_name} here.")
+
         if cls.objects:
             await print_line(f"<gray>You see some stuff here:</gray>")
         for obj in cls.objects:
@@ -111,12 +119,6 @@ class Location(metaclass=LocationMeta):
             for relation, items in obj.item_locations.items():
                 for item in items:
                     await print_line(f"    <gray>-</gray> {relation.title()} the {obj.display_name}, there is a {item.name}.")
-
-        if cls.pathways:
-            await print_line(f"<gray>You can move from here:</gray>")
-        for route, location in cls.pathways.items():
-            article = language.indefinite_article(route)
-            await print_line(f"- There is {article} <paleyellow>{route}</paleyellow> to {location.display_name} here.")
 
     @classmethod
     def applicable_commands(cls) -> list[LocalCommand]:
@@ -156,7 +158,7 @@ class EntrywayLocation(Location):
             description="An old coatrack.",
             item_locations={
                 "on": [
-                    Sword()
+                    LeatherCoat()
                 ]
             }
         )
@@ -255,9 +257,8 @@ class BoudoirLocation(Location):
             description="A medium-sized roundtable. It is the perfect size for a small gathering between close friends, though the scoring and burn marks on the table seem rather uninviting.",
             item_locations={
                 "atop": [
-                    # TODO: Masks
-                    Sword(),
-                    Sword(),
+                    TragedyMask(),
+                    ComedyMask(),
                 ]
             }
         )
@@ -302,7 +303,7 @@ class DiningHallLocation(Location):
             # TODO: Hidden. Note
             item_locations={
                 "under": [
-                    Sword(),
+                    DarcyNote(),
                 ]
             }
         ),
@@ -323,8 +324,7 @@ class MudRoomLocation(Location):
             description="It's covered in red yarn!",
             item_locations={
                 "atop": [
-                    # YARN
-                    Sword(),
+                    EvilYarn(),
                 ]
             }
         ),

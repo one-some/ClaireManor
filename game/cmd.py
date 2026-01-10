@@ -102,14 +102,14 @@ class MoveCommand(Command):
                 await print_line(f"- There is a <paleyellow>{route}</paleyellow> to {location.display_name} here.")
             return
 
-        await Fade(1.0, speed=0.1).wait_for()
+        await Fade(1.0, speed=0.08).wait_for()
         await asyncio.gather(
             sfx.await_sound("walk_wood", stop_at=1.3),
             Player.player.set_location(maybe_location)
         )
-        await Fade(0.0, speed=0.1).wait_for()
-
-        await print_line(f"You're on your way.")
+        await Fade(0.0, speed=0.08).wait_for()
+        await Player.player.post_location_change(maybe_location)
+        # await print_line(f"You're on your way.")
 
 class InspectCommand(Command):
     pattern = [["look", "ls", "inspect"], str]
@@ -148,26 +148,39 @@ class InspectCommand(Command):
 
         await target.describe()
 
-# class TakeCommand(Command):
-#     pattern = [["grab", "get", "take", "collect"], str]
-#     description = "Collects an item in the room"
-# 
-#     @staticmethod
-#     async def execute(arguments: list) -> None:
-#         query = arguments[0].lower()
-# 
-#         # TODO
-# 
-#         kv = {
-#         }
-# 
-#         maybe = db_lookup(location_kv, loc_query)
-# 
-#         if not maybe:
-#             await print_line(f"I don't know what '{query}' is. Maybe <act>look</act> around?")
-#             return
-#         
-#         #TODO: PICKUP
+class TakeCommand(Command):
+    pattern = [["grab", "get", "take", "collect"], str]
+    description = "Collects an item in the room."
+
+    @staticmethod
+    async def execute(arguments: list) -> None:
+        query = arguments[0].lower()
+
+        targets = {}
+        for obj in Player.player.location.objects:
+            for items in obj.item_locations.values():
+                for item in items:
+                    targets[item.name] = {"holder": obj, "item": item}
+
+        maybe_item = db_lookup(targets, query)
+
+        if not maybe_item:
+            await print_line(f"I don't know what '{query}' is. Maybe <act>look</act> around?")
+            return
+
+        obj = maybe_item["holder"]
+        item = maybe_item["item"]
+
+        for obj in Player.player.location.objects:
+            for item_list in obj.item_locations.values():
+                try:
+                    item_list.remove(item)
+                except ValueError:
+                    pass
+        Player.player.inventory.append(item)
+
+        await print_line(f"<yellow>You got {item.name}!</yellow>")
+        await print_line(item.formatted_description)
 
 commands = get_subclasses(Command)
 
@@ -190,10 +203,13 @@ def parse_for_command(command: Command, arg_str: str) -> list:
 async def run_command(command_line: str) -> None:
     await print_line(" ")
 
-    await print_line(RichTextChunk(
-        f"> {command_line}",
-        color=rl.Color(0xFF, 0xFF, 0xBB, 0xFF)
-    ))
+    await print_line(
+        RichTextChunk(
+            f"> {command_line}",
+            color=rl.Color(0xFF, 0xFF, 0xBB, 0xFF)
+        ),
+        now=True
+    )
 
     command_line = command_line.lower()
 

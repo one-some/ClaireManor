@@ -1,6 +1,7 @@
 import time
 import asyncio
 import pyray as rl
+from typing import Optional
 
 from game import ui
 from game.io import wait_for_enter
@@ -41,10 +42,18 @@ async def rich_drip_feed(
         if current_len < total_len:
             await asyncio.sleep(0.0)
 
-async def print_dialog(line: RichTextChunk | RichText | str, wait: bool = True) -> None:
+async def print_dialog(
+    line: RichTextChunk | RichText | str,
+    wait: bool = True,
+    chars_per_second: Optional[int] = None
+) -> None:
     text_renderable = TextRenderable("", parent=ui.active_text_container)
 
-    async for rich in rich_drip_feed(line):
+    feed_kwargs = {}
+    if chars_per_second:
+        feed_kwargs["chars_per_second"] = chars_per_second
+
+    async for rich in rich_drip_feed(line, **feed_kwargs):
         text_renderable.text = rich
 
     if wait:

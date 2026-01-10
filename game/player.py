@@ -59,9 +59,12 @@ class Player:
         self.location = location
 
         ui.change_background(location.name.lower().replace(" ", "_"))
+
+    async def post_location_change(self, location: Location) -> None:
+        # Split so we don't wait for the printing in the loading screen
         await location.describe()
 
-        self.danger += random.random() * 0.2
+        self.danger += random.random() * 0.4
 
         if self.danger > 0.7:
             line = self.watched_msg.sample()

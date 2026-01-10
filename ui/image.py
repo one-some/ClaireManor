@@ -55,7 +55,12 @@ class ImageRenderable(Renderable):
                 allocated_size.y / self.texture.height,
             )
 
-            self.position.x = -allocated_size.x / 2
+            scaled = Vector2(
+                self.texture.width,
+                self.texture.height
+            ) * self.scale
+
+            self.position = (allocated_size - scaled) / 2
 
     def render_self(self, position) -> None:
         if not self.loaded:

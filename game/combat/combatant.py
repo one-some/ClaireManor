@@ -6,7 +6,7 @@ from typing import Optional
 from game.io import print_line, choice_prompt
 from game.items.item import Item, FakeItem
 from game.items.weapon import Weapon, BoneClub
-from game.combat.action import BattleAction, PunchAction
+from game.combat.action import BattleAction, PunchAction, BiteAction
 from game.language import LanguageProfile, PronounSet
 
 class RangedStat:
@@ -219,4 +219,12 @@ class SkeletonCombatant(EnemyCombatant):
 
     def __init__(self, **kwargs) -> None:
         kwargs["lang"] = LanguageProfile("Skeleton", PronounSet.IT, "<gray>%s</gray>")
+        super().__init__(**kwargs)
+
+class RatCombatant(EnemyCombatant):
+    base_actions = [BiteAction()]
+    item_pool = []
+
+    def __init__(self, **kwargs) -> None:
+        kwargs["lang"] = LanguageProfile("Rat", PronounSet.IT, "<gray>%s</gray>")
         super().__init__(**kwargs)

@@ -156,3 +156,22 @@ class BashAction(BattleAction):
         "{User} can't seem to hit {Target}!",
         "{Target} {target.is} too fast for {User}!",
     ])
+
+class BiteAction(BattleAction):
+    name = "Bite"
+    user_impositions = [StaminaBattleImposition(17)]
+    target_impositions = [HealthBattleImposition(3)]
+    fail_rate = 0.30
+    target_effects = [BleedingEffect]
+
+    attempt_messages = MessagePool([
+        "{User} {user.chomps} towards {Target}",
+        "{User} {user.takes} a bite at {Target}",
+    ])
+
+    fail_messages = MessagePool([
+        "{User} {user.misses} {Target}!",
+        "{User} can't seem to hit {Target}!",
+        "{Target} {target.is} too fast for {User}!",
+    ])
+

@@ -5,11 +5,14 @@ from typing import Optional
 from game import fs
 
 cached_sounds = {}
-
 for path in (fs.STATIC_DIR / "sfx").glob("*.ogg"):
     print(f"[sfx] Loading {path.name}...")
-    print(str(path))
     cached_sounds[path.stem] = rl.load_sound(str(path))
+
+cached_music = {}
+for path in (fs.STATIC_DIR / "music").glob("*.mp3"):
+    print(f"[sfx] Loading {path.name}...")
+    cached_music[path.stem] = rl.load_music_stream(str(path))
 
 def play_sound(sound_str: str) -> None:
     # TODO: Some protection against crashing instantly on typos...
